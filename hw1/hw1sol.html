@@ -457,7 +457,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 <p>Try these commands in Bash and interpret the results: <code>cal</code>, <code>cal 2021</code>, <code>cal 9 1752</code> (anything unusual?), <code>date</code>, <code>hostname</code>, <code>arch</code>, <code>uname -a</code>, <code>uptime</code>, <code>who am i</code>, <code>who</code>, <code>w</code>, <code>id</code>, <code>last | head</code>, <code>echo {con,pre}{sent,fer}{s,ed}</code>, <code>time sleep 5</code>, <code>history | tail</code>.</p>
 <div id="solution" class="section level5">
 <h5>Solution:</h5>
-<p><code>cal</code> displays the calendar of current month</p>
+<p><code>cal</code> displays the current month’s calendar</p>
 <pre class="bash"><code>cal</code></pre>
 <pre><code>##     January 2021    
 ## Su Mo Tu We Th Fr Sa
@@ -467,7 +467,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 ## 17 18 19 20 21 22 23
 ## 24 25 26 27 28 29 30
 ## 31</code></pre>
-<p><code>cal 2021</code> displays calendar of year 2021</p>
+<p><code>cal 2021</code> displays the full 2021 calendar</p>
 <pre class="bash"><code>cal 2021</code></pre>
 <pre><code>##                                2021                               
 ## 
@@ -503,6 +503,79 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 ## 17 18 19 20 21 22 23   21 22 23 24 25 26 27   19 20 21 22 23 24 25
 ## 24 25 26 27 28 29 30   28 29 30               26 27 28 29 30 31
 ## 31</code></pre>
+<p><code>cal 9 1752</code> displays the September 1752 calendar. The unusual part of this calendar is that the days September 3-13 are skipped. This is because in 1752 Britain adopted the Gregorian calendar.</p>
+<pre class="bash"><code>cal 9 1752</code></pre>
+<pre><code>##    September 1752   
+## Su Mo Tu We Th Fr Sa
+##        1  2 14 15 16
+## 17 18 19 20 21 22 23
+## 24 25 26 27 28 29 30</code></pre>
+<p><code>date</code> displays the current date and time in UTC</p>
+<pre class="bash"><code>date</code></pre>
+<pre><code>## Fri Jan 15 03:09:46 UTC 2021</code></pre>
+<p><code>hostname</code> displays the name of the current system</p>
+<pre class="bash"><code>hostname</code></pre>
+<pre><code>## ucla-biostat-203b</code></pre>
+<p><code>arch</code> displays the machine architecture for the current machine</p>
+<pre class="bash"><code>arch</code></pre>
+<pre><code>## x86_64</code></pre>
+<p><code>uname -a</code> displays the following system information: kernel name, node name, kernel release, kernel version, machine hardware name, processor type, hardware platform, and operating system</p>
+<pre class="bash"><code>uname -a</code></pre>
+<pre><code>## Linux ucla-biostat-203b 3.10.0-1160.6.1.el7.x86_64 #1 SMP Tue Nov 17 13:59:11 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</code></pre>
+<p><code>uptime</code> displays how long the system has been running, the current time, the number users currently logged-in, and the average system load for the last 1, 5, and 15 minutes</p>
+<pre class="bash"><code>uptime</code></pre>
+<pre><code>##  03:09:46 up 11 days,  5:20,  5 users,  load average: 0.07, 0.06, 0.11</code></pre>
+<p><code>who am i</code> returns nothing, but if you omit the spaces <code>whoami</code> displays the current user’s user name</p>
+<pre class="bash"><code>who am i
+
+whoami</code></pre>
+<pre><code>## avila.analissa</code></pre>
+<p><code>who</code> displays a information about each user who is currently logged-in. The information includes: user name, terminal name, login time, and remote host</p>
+<pre class="bash"><code>who</code></pre>
+<pre><code>## ajedward pts/0        2021-01-15 02:56 (cpe-98-149-10-219.natmtn.res.rr.com)
+## mia.chen1998 pts/1        2021-01-15 02:17 (131.179.156.36)
+## spendlove.sj pts/8        2021-01-14 23:14 (cpe-172-117-248-147.socal.res.rr.com)
+## hunanzhou pts/16       2021-01-14 23:15 (47.145.211.101)
+## dshehtanian pts/26       2021-01-14 23:32 (cpe-45-51-98-96.socal.res.rr.com)</code></pre>
+<p><code>w</code> displays the <code>uptime</code> information as a header, along with more/better formatted information about who is currently logged-in. The current user information includes: user name, terminal name, remote host, login time, idle time, JCPU time, PCPU time, and command line of their current process</p>
+<pre class="bash"><code>w</code></pre>
+<pre><code>##  03:09:46 up 11 days,  5:20,  5 users,  load average: 0.07, 0.06, 0.11
+## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+## ajedward pts/0    cpe-98-149-10-21 02:56   12:10   0.02s  0.02s -bash
+## mia.chen pts/1    131.179.156.36   02:17   52:23   0.01s  0.01s -bash
+## spendlov pts/8    cpe-172-117-248- 23:14    3:52m  0.01s  0.01s -bash
+## hunanzho pts/16   47.145.211.101   23:15   41:54   0.22s  0.49s sshd: hunanzhou [priv]
+## dshehtan pts/26   cpe-45-51-98-96. 23:32    3:30m  0.10s  0.10s -bash</code></pre>
+<p><code>id</code> displays the real and effective user and group id’s for the current user</p>
+<pre class="bash"><code>id</code></pre>
+<pre><code>## uid=1003(avila.analissa) gid=1005(avila.analissa) groups=1005(avila.analissa) context=system_u:system_r:initrc_t:s0</code></pre>
+<p><code>last | head</code> displays the first 10 lines of the list of all users who have logged in and out of the system (starting with the most recent user to login). The list includes the user’s name, terminal, remote host, and login and logout time.</p>
+<pre class="bash"><code>last | head</code></pre>
+<pre><code>## ajedward pts/0        cpe-98-149-10-21 Fri Jan 15 02:56   still logged in   
+## mia.chen pts/1        131.179.156.36   Fri Jan 15 02:17   still logged in   
+## buwenson pts/2        066-215-070-170. Fri Jan 15 01:43 - 01:43  (00:00)    
+## OLIVIAGO pts/1        108-64-213-148.l Fri Jan 15 01:40 - 02:04  (00:24)    
+## OLIVIAGO pts/1        108-64-213-148.l Fri Jan 15 01:15 - 01:21  (00:06)    
+## hunanzho pts/38       47.145.211.101   Fri Jan 15 00:52 - 01:46  (00:53)    
+## rlwillia pts/11       cpe-172-250-239- Fri Jan 15 00:29 - 00:33  (00:03)    
+## rlwillia pts/11       cpe-172-250-239- Fri Jan 15 00:27 - 00:28  (00:01)    
+## rlwillia pts/40       cpe-172-250-239- Fri Jan 15 00:21 - 00:22  (00:00)    
+## alvinw   pts/37       cpe-172-112-186- Fri Jan 15 00:21 - 02:31  (02:10)</code></pre>
+<p><code>echo {con,pre}{sent,fer}{s,ed}</code> prints all 8 words that are created by sequentially joining one element from each bracketed set. For example, combining the first element of each bracketed set gives the word ‘consents’</p>
+<pre class="bash"><code>echo {con,pre}{sent,fer}{s,ed}</code></pre>
+<pre><code>## consents consented confers confered presents presented prefers prefered</code></pre>
+<p><code>time sleep 5</code> this command tells the system to pause for 5 seconds and then print the time it took for the command to run (which should be very close to 5 seconds)</p>
+<pre class="bash"><code>time sleep 5</code></pre>
+<pre><code>## 
+## real 0m5.002s
+## user 0m0.002s
+## sys  0m0.000s</code></pre>
+<p><code>history | tail</code> this command should display the last 10 lines of the user’s command history (note you have to enable history or the command will return nothing). Since <code>history | tail</code> is the only command in this chunck, it is the only command returned</p>
+<pre class="bash"><code>## first enable history
+set -o history
+
+history | tail</code></pre>
+<pre><code>##     1  history | tail</code></pre>
 </div>
 </div>
 

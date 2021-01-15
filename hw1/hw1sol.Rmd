@@ -101,12 +101,88 @@ Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this sh
 Try these commands in Bash and interpret the results: `cal`, `cal 2021`, `cal 9 1752` (anything unusual?), `date`, `hostname`, `arch`, `uname -a`, `uptime`, `who am i`, `who`, `w`, `id`, `last | head`, `echo {con,pre}{sent,fer}{s,ed}`, `time sleep 5`, `history | tail`.
 
 ##### Solution: 
-`cal` displays the calendar of current month
+
+`cal` displays the current month's calendar
 ```{bash}
 cal
 ```
 
-`cal 2021` displays calendar of year 2021
+`cal 2021` displays the full 2021 calendar 
 ```{bash}
 cal 2021
+```
+
+`cal 9 1752` displays the September 1752 calendar. The unusual part of this calendar is that the days September 3-13 are skipped. This is because in 1752 Britain adopted the Gregorian calendar. 
+```{bash}
+cal 9 1752
+```
+
+`date` displays the current date and time in UTC
+```{bash}
+date
+```
+
+`hostname` displays the name of the current system
+```{bash}
+hostname
+```
+
+`arch` displays the machine architecture for the current machine
+```{bash}
+arch
+```
+
+`uname -a` displays the following system information: kernel name, node name, kernel release, kernel version, machine hardware name, processor type, hardware platform, and operating system
+```{bash}
+uname -a
+```
+
+`uptime` displays how long the system has been running, the current time, the number users currently logged-in, and the average system load for the last 1, 5, and 15 minutes
+```{bash}
+uptime
+```
+
+`who am i` returns nothing, but if you omit the spaces `whoami` displays the current user's user name
+```{bash}
+who am i
+
+whoami
+```
+
+`who` displays a information about each user who is currently logged-in. The information includes: user name, terminal name, login time, and remote host  
+```{bash}
+who
+```
+
+`w` displays the `uptime` information as a header, along with more/better formatted information about who is currently logged-in. The current user information includes: user name, terminal name, remote host, login time, idle time, JCPU time, PCPU time, and command line of their current process
+```{bash}
+w
+```
+
+`id` displays the real and effective user and group id's for the current user
+```{bash}
+id
+```
+
+`last | head` displays the first 10 lines of the list of all users who have logged in and out of the system (starting with the most recent user to login). The list includes the user's name, terminal, remote host, and login and logout time.
+```{bash}
+last | head
+```
+
+`echo {con,pre}{sent,fer}{s,ed}` prints all 8 words that are created by sequentially joining one element from each bracketed set. For example, combining the first element of each bracketed set gives the word 'consents'
+```{bash}
+echo {con,pre}{sent,fer}{s,ed}
+```
+
+`time sleep 5` this command tells the system to pause for 5 seconds and then print the time it took for the command to run (which should be very close to 5 seconds)
+```{bash}
+time sleep 5
+```
+
+`history | tail` this command should display the last 10 lines of the user's command history (note you have to enable history or the command will return nothing). Since `history | tail` is the only command in this chunck, it is the only command returned
+```{bash}
+## first enable history
+set -o history
+
+history | tail
 ```
