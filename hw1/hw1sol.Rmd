@@ -21,23 +21,24 @@ sessionInfo()
 1. Apply for the [Student Developer Pack](https://education.github.com/pack) at GitHub using your UCLA email.
 
     **Solution:** Done
-
+  
 2. Create a **private** repository `biostat-203b-2021-winter` and add `Hua-Zhou`, `Chris-German` and `ElvisCuiHan` as your collaborators with write permission.
 
     **Solution:** Done
-
+  
 3. Top directories of the repository should be `hw1`, `hw2`, ... Maintain two branches `master` and `develop`. The `develop` branch will be your main playground, the place where you develop solution (code) to homework problems and write up report. The `master` branch will be your presentation area. Submit your homework files (R markdown file `Rmd`, `html` file converted from R markdown, all code and data sets to reproduce results) in `master` branch.
 
     **Solution:** Done
-
+  
 4. After each homework due date, teaching assistant and instructor will check out your master branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
 
     **Solution:** Done
-
+  
 5. After this course, you can make this repository public and use it to demonstrate your skill sets on job market.
 
     **Solution:** Done
-
+  
+  
 ## Q2. Linux Shell Commands
 
 1. This exercise (and later in this course) uses the [MIMIC-IV data](https://mimic-iv.mit.edu), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic-iv.mit.edu/docs/access/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)
@@ -46,9 +47,8 @@ sessionInfo()
     **Solution:**  
     Here is the link to my [course completion report](https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162).  
     Here is the link to my [course completion certificate](https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162).  
-
-
-
+  
+  
 2. The `/usr/203b-data/mimic-iv/` folder on teaching server contains data sets from MIMIC-IV. Refer to <https://mimic-iv.mit.edu/docs/datasets/> for details of data files.  
     ```{bash}
     ls -l /usr/203b-data/mimic-iv
@@ -58,8 +58,8 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     Use Bash commands to answer following questions.  
     
     **Solution:** Done
-
-
+  
+  
 3. Display the contents in the folders `core`, `hosp`, `icu`. What are the functionalities of the bash commands `zcat`, `zless`, `zmore`, and `zgrep`? 
 
     **Solution:**  
@@ -104,8 +104,9 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     ## functionality of 'zgrep'
     zgrep --help
     ```
-
-
+  
+  
+  
 4. What's the output of following bash script?
     ```{bash, eval=F}
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
@@ -115,13 +116,67 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     ```
 Display the number of lines in each data file using a similar loop.
 
-**Solution:**  
+    **Solution:** 
+    This script prints detailed information on all compressed files (.gz) inside the `core` folder
+    ```{bash}
+    for datafile in /usr/203b-data/mimic-iv/core/*.gz
+      do
+        ls -l $datafile
+      done
+    ```
 
-
-
+    This script prints the number of lines in each data file in the `core` folder
+    ```{bash}
+    for datafile in /usr/203b-data/mimic-iv/core/*.gz
+      do
+        echo "$(zcat $datafile | wc -l) $datafile"
+      done
+    ```
+  
+  
 5. Display the first few lines of `admissions.csv.gz`. How many rows are in this data file? How many unique patients (identified by `subject_id`) are in this data file? What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, `language`, `marital_status`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq`, `wc`, and so on.)
 
 **Solution:**  
+```{bash}
+ ##### DATA FILE: 'admissions.csv.gz' #####
+
+## display first few lines
+echo "first few lines:"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | head
+
+## number of rows
+echo "number of rows:"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | wc -l
+
+## number of unique patients
+echo "number of unique patients:"
+#zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz |
+
+## possible values of taken by `admission_type` and their count
+echo "counts and values of 'admission_type':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $6}' | sort | uniq -c
+
+## possible values of taken by `admission_location` and their count
+echo "counts and values of 'admission_location':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $7}' | sort | uniq -c
+
+## possible values of taken by `insurance` and their count
+echo "counts and values of 'insurance':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $9}' | sort | uniq -c
+
+## possible values of taken by `language` and their count
+echo "counts and values of 'language':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $10}' | sort | uniq -c
+
+## possible values of taken by `marital_status` and their count
+echo "counts and values of 'marital_status':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $11}' | sort | uniq -c
+
+## possible values of taken by `ethnicity` and their count
+echo "counts and values of 'ethnicity':"
+zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $12}' | sort | uniq -c
+
+```
 
 
 
