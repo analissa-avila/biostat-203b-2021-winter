@@ -43,7 +43,9 @@ sessionInfo()
 1. This exercise (and later in this course) uses the [MIMIC-IV data](https://mimic-iv.mit.edu), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic-iv.mit.edu/docs/access/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)
 
 
-**Solution:** Here is the link to my [course completion report](https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162). Here is the link to my [course completion certificate](https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162).
+**Solution:**  
+Here is the link to my [course completion report](https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162).  
+Here is the link to my [course completion certificate](https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162).  
 
 
 
@@ -84,6 +86,7 @@ for name in Elizabeth Jane Lydia Darcy
  done
 ```
 
+
 2. What's the difference between the following two commands?
     ```{bash eval=FALSE}
     echo 'hello, world' > test1.txt
@@ -93,10 +96,9 @@ for name in Elizabeth Jane Lydia Darcy
     echo 'hello, world' >> test2.txt
     ```
     
-**Solution:**
-The first command uses `>` which directs the output "hello, world" to a file named test1.txt. If that command is run again, new file named test1.txt will be created.
-The second command uses `>>` which append the output "hello, world" to a file named test2.txt. If that command is run again, another line of "hello, world" will be appended to the existing test2.txt file.
-
+**Solution:**  
+The first command uses `>` which directs the output "hello, world" to a file named test1.txt. If that command is run again, a new file named test1.txt will be created.  
+The second command uses `>>` which appends the output "hello, world" to a file named test2.txt. If that command is run again, another line of "hello, world" will be appended to the existing test2.txt file.  
 
 
 3. Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
@@ -113,6 +115,21 @@ Using `chmod` make the file executable by the owner, and run
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
 **Solution:**
+```{bash eval=FALSE}
+#Run this command in local machine to copy file to teaching server
+scp middle.sh avila.analissa@server.ucla-biostat-203b.com:/home/avila.analissa/biostat-203b-2021-winter/hw1/
+
+```
+
+```{bash}
+## make file executable by the owner 
+chmod u+x middle.sh
+
+## run
+./middle.sh pride_and_prejudice.txt 20 5
+```
+The output is the last 5 lines of the first 20 lines (lines 16-20) of the Pride and Prejudice text file. Specifically, it prints the author and editor information.  
+The `"$1"`, `"$2"`, and `"$3"` are positional parameters. They contain the content of the command line:`$1` contains the first item (pride_and_prejudice.txt - file name), `$2` contains the second item (20 - # of first lines to print using `head` command), and `$3` contains the third item (5 - # of last lines to print using `tail` command).  
 The first line tells Linux to use the 'sh' shell to run the commands 
 
 

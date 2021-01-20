@@ -410,7 +410,9 @@ summary {
 <ol style="list-style-type: decimal">
 <li>This exercise (and later in this course) uses the <a href="https://mimic-iv.mit.edu">MIMIC-IV data</a>, a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <a href="https://mimic-iv.mit.edu/docs/access/" class="uri">https://mimic-iv.mit.edu/docs/access/</a> to (1) complete the CITI <code>Data or Specimens Only Research</code> course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)</li>
 </ol>
-<p><strong>Solution:</strong> Here is the link to my <a href="https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162">course completion report</a>. Here is the link to my <a href="https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162">course completion certificate</a>.</p>
+<p><strong>Solution:</strong><br />
+Here is the link to my <a href="https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162">course completion report</a>.<br />
+Here is the link to my <a href="https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162">course completion certificate</a>.</p>
 <ol start="2" style="list-style-type: decimal">
 <li><p>The <code>/usr/203b-data/mimic-iv/</code> folder on teaching server contains data sets from MIMIC-IV. Refer to <a href="https://mimic-iv.mit.edu/docs/datasets/" class="uri">https://mimic-iv.mit.edu/docs/datasets/</a> for details of data files.</p>
 <pre class="bash"><code>ls -l /usr/203b-data/mimic-iv</code></pre>
@@ -454,7 +456,9 @@ summary {
 <p>and</p>
 <pre class="bash"><code>echo &#39;hello, world&#39; &gt;&gt; test2.txt</code></pre></li>
 </ol>
-<p><strong>Solution:</strong> The first command uses <code>&gt;</code> which directs the output “hello, world” to a file named test1.txt. If that command is run again, new file named test1.txt will be created. The second command uses <code>&gt;&gt;</code> which append the output “hello, world” to a file named test2.txt. If that command is run again, another line of “hello, world” will be appended to the existing test2.txt file.</p>
+<p><strong>Solution:</strong><br />
+The first command uses <code>&gt;</code> which directs the output “hello, world” to a file named test1.txt. If that command is run again, a new file named test1.txt will be created.<br />
+The second command uses <code>&gt;&gt;</code> which appends the output “hello, world” to a file named test2.txt. If that command is run again, another line of “hello, world” will be appended to the existing test2.txt file.</p>
 <ol start="3" style="list-style-type: decimal">
 <li><p>Using your favorite text editor (e.g., <code>vi</code>), type the following and save the file as <code>middle.sh</code>:</p>
 <pre class="bash"><code>#!/bin/sh
@@ -465,7 +469,23 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 <pre class="bash"><code>./middle.sh pride_and_prejudice.txt 20 5</code></pre>
 <p>Explain the output. Explain the meaning of <code>&quot;$1&quot;</code>, <code>&quot;$2&quot;</code>, and <code>&quot;$3&quot;</code> in this shell script. Why do we need the first line of the shell script?</p></li>
 </ol>
-<p><strong>Solution:</strong> The first line tells Linux to use the ‘sh’ shell to run the commands</p>
+<p><strong>Solution:</strong></p>
+<pre class="bash"><code>#Run this command in local machine to copy file to teaching server
+scp middle.sh avila.analissa@server.ucla-biostat-203b.com:/home/avila.analissa/biostat-203b-2021-winter/hw1/
+</code></pre>
+<pre class="bash"><code>## make file executable by the owner 
+chmod u+x middle.sh
+
+## run
+./middle.sh pride_and_prejudice.txt 20 5</code></pre>
+<pre><code>## 
+## Author: Jane Austen
+## 
+## Editor: R. W. (Robert William) Chapman
+## </code></pre>
+<p>The output is the last 5 lines of the first 20 lines (lines 16-20) of the Pride and Prejudice text file. Specifically, it prints the author and editor information.<br />
+The <code>&quot;$1&quot;</code>, <code>&quot;$2&quot;</code>, and <code>&quot;$3&quot;</code> are positional parameters. They contain the content of the command line:<code>$1</code> contains the first item (pride_and_prejudice.txt - file name), <code>$2</code> contains the second item (20 - # of first lines to print using <code>head</code> command), and <code>$3</code> contains the third item (5 - # of last lines to print using <code>tail</code> command).<br />
+The first line tells Linux to use the ‘sh’ shell to run the commands</p>
 </div>
 <div id="q4.-more-fun-with-linux" class="section level2">
 <h2>Q4. More fun with Linux</h2>
@@ -526,7 +546,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 ## 24 25 26 27 28 29 30</code></pre>
 <p><code>date</code> displays the current date and time in UTC</p>
 <pre class="bash"><code>date</code></pre>
-<pre><code>## Wed Jan 20 00:30:22 UTC 2021</code></pre>
+<pre><code>## Wed Jan 20 02:23:36 UTC 2021</code></pre>
 <p><code>hostname</code> displays the name of the current system</p>
 <pre class="bash"><code>hostname</code></pre>
 <pre><code>## ucla-biostat-203b</code></pre>
@@ -538,7 +558,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 <pre><code>## Linux ucla-biostat-203b 3.10.0-1160.6.1.el7.x86_64 #1 SMP Tue Nov 17 13:59:11 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</code></pre>
 <p><code>uptime</code> displays how long the system has been running, the current time, the number users currently logged-in, and the average system load for the last 1, 5, and 15 minutes</p>
 <pre class="bash"><code>uptime</code></pre>
-<pre><code>##  00:30:23 up 16 days,  2:41, 11 users,  load average: 0.37, 0.35, 0.33</code></pre>
+<pre><code>##  02:23:36 up 16 days,  4:34,  4 users,  load average: 0.06, 0.15, 0.21</code></pre>
 <p><code>who am i</code> returns nothing, but if you omit the spaces <code>whoami</code> displays the current user’s user name</p>
 <pre class="bash"><code>who am i
 
@@ -546,56 +566,42 @@ whoami</code></pre>
 <pre><code>## avila.analissa</code></pre>
 <p><code>who</code> displays a information about each user who is currently logged-in. The information includes: user name, terminal name, login time, and remote host</p>
 <pre class="bash"><code>who</code></pre>
-<pre><code>## jihcai   pts/4        2021-01-19 18:36 (ip68-6-101-100.sb.sd.cox.net)
-## andyliugraduateschool pts/7        2021-01-19 22:56 (c-65-50-147-213.hs.gigamonster.net)
-## pdgeraldo pts/11       2021-01-19 23:13 (131.179.156.37)
-## huazhou  pts/12       2021-01-19 23:14 (108-64-58-205.lightspeed.irvnca.sbcglobal.net)
-## jtan.smeltzer pts/13       2021-01-19 23:14 (131.179.158.26)
-## kmishimoto pts/15       2021-01-19 23:15 (ip174-67-246-239.oc.oc.cox.net)
-## filipovicmilan271 pts/16       2021-01-19 23:18 (ip70-181-107-212.oc.oc.cox.net)
-## tibbe1td pts/17       2021-01-19 23:15 (c-68-55-91-32.hsd1.mi.comcast.net)
+<pre><code>## filipovicmilan271 pts/16       2021-01-19 23:18 (ip70-181-107-212.oc.oc.cox.net)
 ## linyuzhou pts/18       2021-01-19 23:16 (s-169-232-70-224.resnet.ucla.edu)
 ## valentina214 pts/23       2021-01-19 23:59 (47.156.178.126)
 ## asburysean pts/25       2021-01-20 00:03 (c-73-25-154-169.hsd1.or.comcast.net)</code></pre>
 <p><code>w</code> displays the <code>uptime</code> information as a header, along with more/better formatted information about who is currently logged-in. The current user information includes: user name, terminal name, remote host, login time, idle time, JCPU time, PCPU time, and command line of their current process</p>
 <pre class="bash"><code>w</code></pre>
-<pre><code>##  00:30:23 up 16 days,  2:41, 11 users,  load average: 0.37, 0.35, 0.33
+<pre><code>##  02:23:36 up 16 days,  4:34,  4 users,  load average: 0.06, 0.15, 0.21
 ## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-## jihcai   pts/4    ip68-6-101-100.s 18:36    3:59m  0.66s  0.58s -bash
-## andyliug pts/7    c-65-50-147-213. 22:56   47:51   0.01s  0.01s -bash
-## pdgerald pts/11   131.179.156.37   23:13   52:39   0.07s  0.07s -bash
-## huazhou  pts/12   108-64-58-205.li 23:14   43:35   0.13s  0.13s -bash
-## jtan.sme pts/13   131.179.158.26   23:14   37:27   0.08s  0.08s -bash
-## kmishimo pts/15   ip174-67-246-239 23:15    7.00s  0.22s  0.22s -bash
-## filipovi pts/16   ip70-181-107-212 23:18   27:35   0.07s  0.07s -bash
-## tibbe1td pts/17   c-68-55-91-32.hs 23:15    1:15m  0.02s  0.02s -bash
-## linyuzho pts/18   s-169-232-70-224 23:16    1:11m  0.02s  0.02s -bash
-## valentin pts/23   47.156.178.126   23:59   30:35   0.01s  0.01s -bash
-## asburyse pts/25   c-73-25-154-169. 00:03   24:15   0.01s  0.01s -bash</code></pre>
+## filipovi pts/16   ip70-181-107-212 23:18   54:16   0.08s  0.08s -bash
+## linyuzho pts/18   s-169-232-70-224 23:16    1:00m  0.07s  0.07s -bash
+## valentin pts/23   47.156.178.126   23:59    2:23m  0.01s  0.01s -bash
+## asburyse pts/25   c-73-25-154-169. 00:03    2:17m  0.01s  0.01s -bash</code></pre>
 <p><code>id</code> displays the real and effective user and group id’s for the current user</p>
 <pre class="bash"><code>id</code></pre>
 <pre><code>## uid=1003(avila.analissa) gid=1005(avila.analissa) groups=1005(avila.analissa) context=system_u:system_r:initrc_t:s0</code></pre>
 <p><code>last | head</code> displays the first 10 lines of the list of all users who have logged in and out of the system (starting with the most recent user to login). The list includes the user’s name, terminal, remote host, and login and logout time.</p>
 <pre class="bash"><code>last | head</code></pre>
-<pre><code>## asburyse pts/25       c-73-25-154-169. Wed Jan 20 00:03   still logged in   
+<pre><code>## alvinw   pts/4        cpe-172-112-186- Wed Jan 20 01:30 - 01:30  (00:00)    
+## jyixzhou pts/11       cpe84948c862443- Wed Jan 20 01:17 - 02:16  (00:58)    
+## avila.an pts/11       108-75-116-179.l Wed Jan 20 01:09 - 01:13  (00:03)    
+## wzdbruin pts/4        112.32.12.243    Wed Jan 20 00:59 - 01:24  (00:25)    
+## asburyse pts/25       c-73-25-154-169. Wed Jan 20 00:03   still logged in   
 ## valentin pts/23       47.156.178.126   Tue Jan 19 23:59   still logged in   
 ## kmli     pts/6        ip68-110-213-196 Tue Jan 19 23:46 - 00:01  (00:14)    
 ## yingyanw pts/21       s-164-67-81-28.r Tue Jan 19 23:38 - 00:07  (00:28)    
 ## wzdbruin pts/22       112.32.12.243    Tue Jan 19 23:34 - 23:41  (00:07)    
-## zianzhua pts/21       110.88.97.219    Tue Jan 19 23:33 - 23:34  (00:01)    
-## filipovi pts/16       ip70-181-107-212 Tue Jan 19 23:18   still logged in   
-## linyuzho pts/18       s-169-232-70-224 Tue Jan 19 23:16   still logged in   
-## tibbe1td pts/17       c-68-55-91-32.hs Tue Jan 19 23:15   still logged in   
-## valentin pts/16       47.156.178.126   Tue Jan 19 23:15 - 23:16  (00:01)</code></pre>
+## zianzhua pts/21       110.88.97.219    Tue Jan 19 23:33 - 23:34  (00:01)</code></pre>
 <p><code>echo {con,pre}{sent,fer}{s,ed}</code> prints all 8 words that are created by sequentially joining one element from each bracketed set. For example, combining the first element of each bracketed set gives the word ‘consents’</p>
 <pre class="bash"><code>echo {con,pre}{sent,fer}{s,ed}</code></pre>
 <pre><code>## consents consented confers confered presents presented prefers prefered</code></pre>
 <p><code>time sleep 5</code> this command tells the system to pause for 5 seconds and then print the time it took for the command to run (which should be very close to 5 seconds)</p>
 <pre class="bash"><code>time sleep 5</code></pre>
 <pre><code>## 
-## real 0m5.002s
-## user 0m0.000s
-## sys  0m0.002s</code></pre>
+## real 0m5.003s
+## user 0m0.002s
+## sys  0m0.001s</code></pre>
 <p><code>history | tail</code> this command should display the last 10 lines of the user’s command history (note you have to enable history or the command will return nothing). Since <code>history | tail</code> is the only command in this chunck, it is the only command returned</p>
 <pre class="bash"><code>## first enable history
 set -o history
