@@ -20,32 +20,32 @@ sessionInfo()
 
 1. Apply for the [Student Developer Pack](https://education.github.com/pack) at GitHub using your UCLA email.
 
-**Solution:** Done
+    **Solution:** Done
 
 2. Create a **private** repository `biostat-203b-2021-winter` and add `Hua-Zhou`, `Chris-German` and `ElvisCuiHan` as your collaborators with write permission.
 
-**Solution:** Done
+    **Solution:** Done
 
 3. Top directories of the repository should be `hw1`, `hw2`, ... Maintain two branches `master` and `develop`. The `develop` branch will be your main playground, the place where you develop solution (code) to homework problems and write up report. The `master` branch will be your presentation area. Submit your homework files (R markdown file `Rmd`, `html` file converted from R markdown, all code and data sets to reproduce results) in `master` branch.
 
-**Solution:** Done
+    **Solution:** Done
 
 4. After each homework due date, teaching assistant and instructor will check out your master branch for grading. Tag each of your homework submissions with tag names `hw1`, `hw2`, ... Tagging time will be used as your submission time. That means if you tag your `hw1` submission after deadline, penalty points will be deducted for late submission.
 
-**Solution:** Done
+    **Solution:** Done
 
 5. After this course, you can make this repository public and use it to demonstrate your skill sets on job market.
 
-**Solution:** Done
+    **Solution:** Done
 
 ## Q2. Linux Shell Commands
 
 1. This exercise (and later in this course) uses the [MIMIC-IV data](https://mimic-iv.mit.edu), a freely accessible critical care database developed by the MIT Lab for Computational Physiology. Follow the instructions at <https://mimic-iv.mit.edu/docs/access/> to (1) complete the CITI `Data or Specimens Only Research` course and (2) obtain the PhysioNet credential for using the MIMIC-IV data. Display the verification links to your completion report and completion certificate here. (Hint: The CITI training takes a couple hours and the PhysioNet credentialing takes a couple days; do not leave it to the last minute.)
 
 
-**Solution:**  
-Here is the link to my [course completion report](https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162).  
-Here is the link to my [course completion certificate](https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162).  
+    **Solution:**  
+    Here is the link to my [course completion report](https://www.citiprogram.org/verify/?ke701e4f3-cd9e-4b2c-bb4d-9913085b5c57-40340162).  
+    Here is the link to my [course completion certificate](https://www.citiprogram.org/verify/?w30eef218-8d98-4cf0-836b-9b0c350f5427-40340162).  
 
 
 
@@ -55,9 +55,56 @@ Here is the link to my [course completion certificate](https://www.citiprogram.o
     ```
 Please, do **not** put these data files into Git; they are big. Do **not** copy them into your directory. Do **not** decompress the gz data files. These create unnecessary big files on storage and are not big data friendly practices. Just read from the data folder `/usr/203b-data/mimic-iv` directly in following exercises. 
 
-    Use Bash commands to answer following questions.
+    Use Bash commands to answer following questions.  
+    
+    **Solution:** Done
+
 
 3. Display the contents in the folders `core`, `hosp`, `icu`. What are the functionalities of the bash commands `zcat`, `zless`, `zmore`, and `zgrep`? 
+
+    **Solution:**  
+    ```{bash}
+    ## contents in 'core' folder
+    ls -l /usr/203b-data/mimic-iv/core
+    ```
+    
+    ```{bash}
+    ## contents in 'hosp' folder
+    ls -l /usr/203b-data/mimic-iv/hosp
+    ```
+    
+    ```{bash}
+    ## contnets in 'icu' folder
+    ls -l /usr/203b-data/mimic-iv/icu
+    
+    ```
+    
+    The bash commands `zcat`, `zless`, `zmore`, and `zgrep` are equivalent to `cat`, `less`, `more` and `grep`, but they operate on the uncompressed contents of compressed files.  
+    
+    `zcat` prints the contents of the compressed file 
+    ```{bash}
+    ## functionality of 'zcat'
+    zcat --help
+    ```
+    
+    `zless` browses a compressed text file screen by screen (upwards or downwards)  
+    ```{bash}
+    ## functionality of 'zless'
+    zless --help
+    ```
+    
+    `zmore`browses a compressed text file screen by screen (only downwards)  
+    ```{bash}
+    ## functionality of 'zmore'
+    zmore --help
+    ```
+    
+    `zgrep`prints lines of a compressed file that match an expression
+    ```{bash}
+    ## functionality of 'zgrep'
+    zgrep --help
+    ```
+
 
 4. What's the output of following bash script?
     ```{bash, eval=F}
@@ -68,7 +115,15 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     ```
 Display the number of lines in each data file using a similar loop.
 
-4. Display the first few lines of `admissions.csv.gz`. How many rows are in this data file? How many unique patients (identified by `subject_id`) are in this data file? What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, `language`, `marital_status`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq`, `wc`, and so on.)
+**Solution:**  
+
+
+
+5. Display the first few lines of `admissions.csv.gz`. How many rows are in this data file? How many unique patients (identified by `subject_id`) are in this data file? What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, `language`, `marital_status`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq`, `wc`, and so on.)
+
+**Solution:**  
+
+
 
 ## Q3. Who's popular in Price and Prejudice
 
@@ -78,13 +133,13 @@ Display the number of lines in each data file using a similar loop.
     ```
 Do **not** put this text file `pride_and_prejudice.txt` in Git. Using a `for` loop, how would you tabulate the number of times each of the four characters is mentioned?
 
-**Solution:** Elizabeth is the most mentioned character.
-```{bash}
-for name in Elizabeth Jane Lydia Darcy
- do
-    echo "${name} $(grep -o ${name} pride_and_prejudice.txt | wc -l)"
- done
-```
+    **Solution:** Elizabeth is the most mentioned character.
+    ```{bash}
+    for name in Elizabeth Jane Lydia Darcy
+     do
+        echo "${name} $(grep -o ${name} pride_and_prejudice.txt | wc -l)"
+     done
+    ```
 
 
 2. What's the difference between the following two commands?
@@ -96,9 +151,9 @@ for name in Elizabeth Jane Lydia Darcy
     echo 'hello, world' >> test2.txt
     ```
     
-**Solution:**  
-The first command uses `>` which directs the output "hello, world" to a file named test1.txt. If that command is run again, a new file named test1.txt will be created.  
-The second command uses `>>` which appends the output "hello, world" to a file named test2.txt. If that command is run again, another line of "hello, world" will be appended to the existing test2.txt file.  
+    **Solution:**  
+    The first command uses `>` which directs the output "hello, world" to a file named test1.txt. If that command is run again, a new file named test1.txt will be created.  
+    The second command uses `>>` which appends the output "hello, world" to a file named test2.txt. If that command is run again, another line of "hello, world" will be appended to the existing test2.txt file.  
 
 
 3. Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
@@ -114,23 +169,24 @@ Using `chmod` make the file executable by the owner, and run
     ```
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 
-**Solution:**
-```{bash eval=FALSE}
-#Run this command in local machine to copy file to teaching server
-scp middle.sh avila.analissa@server.ucla-biostat-203b.com:/home/avila.analissa/biostat-203b-2021-winter/hw1/
-
-```
-
-```{bash}
-## make file executable by the owner 
-chmod u+x middle.sh
-
-## run
-./middle.sh pride_and_prejudice.txt 20 5
-```
-The output is the last 5 lines of the first 20 lines (lines 16-20) of the Pride and Prejudice text file. Specifically, it prints the author and editor information.  
-The `"$1"`, `"$2"`, and `"$3"` are positional parameters. They contain the content of the command line:`$1` contains the first item (pride_and_prejudice.txt - file name), `$2` contains the second item (20 - # of first lines to print using `head` command), and `$3` contains the third item (5 - # of last lines to print using `tail` command).  
-The first line tells Linux to use the 'sh' shell to run the commands 
+    **Solution:**
+    ```{bash eval=FALSE}
+    #Run this command in local machine to copy file to teaching server
+    scp middle.sh avila.analissa@server.ucla-biostat-203b.com:/home/avila.analissa/biostat-203b-2021-winter/hw1/
+    
+    ```
+    
+    ```{bash}
+    ## make file executable by the owner 
+    chmod u+x middle.sh
+    
+    ## run
+    ./middle.sh pride_and_prejudice.txt 20 5
+    ```
+    
+    The output is the last 5 lines of the first 20 lines (lines 16-20) of the Pride and Prejudice text file. Specifically, it prints the author and editor information.  
+    The `"$1"`, `"$2"`, and `"$3"` are positional parameters. They contain the content of the command line:`$1` contains the first item (pride_and_prejudice.txt - file name), `$2` contains the second item (20 - # of first lines to print using `head` command), and `$3` contains the third item (5 - # of last lines to print using `tail` command).  
+    The first line tells Linux to use the 'sh' shell to run the commands 
 
 
 ## Q4. More fun with Linux
