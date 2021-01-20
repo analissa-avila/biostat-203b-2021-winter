@@ -438,10 +438,24 @@ summary {
 <li><p>You and your friend just have finished reading <em>Pride and Prejudice</em> by Jane Austen. Among the four main characters in the book, Elizabeth, Jane, Lydia, and Darcy, your friend thinks that Darcy was the most mentioned. You, however, are certain it was Elizabeth. Obtain the full text of the novel from <a href="http://www.gutenberg.org/cache/epub/42671/pg42671.txt" class="uri">http://www.gutenberg.org/cache/epub/42671/pg42671.txt</a> and save to your local folder.</p>
 <pre class="bash"><code>curl http://www.gutenberg.org/cache/epub/42671/pg42671.txt &gt; pride_and_prejudice.txt</code></pre>
 <p>Do <strong>not</strong> put this text file <code>pride_and_prejudice.txt</code> in Git. Using a <code>for</code> loop, how would you tabulate the number of times each of the four characters is mentioned?</p></li>
+</ol>
+<p><strong>Solution:</strong> Elizabeth is the most mentioned character.</p>
+<pre class="bash"><code>for name in Elizabeth Jane Lydia Darcy
+ do
+    echo &quot;${name} $(grep -o ${name} pride_and_prejudice.txt | wc -l)&quot;
+ done</code></pre>
+<pre><code>## Elizabeth 634
+## Jane 294
+## Lydia 170
+## Darcy 417</code></pre>
+<ol start="2" style="list-style-type: decimal">
 <li><p>What’s the difference between the following two commands?</p>
 <pre class="bash"><code>echo &#39;hello, world&#39; &gt; test1.txt</code></pre>
 <p>and</p>
 <pre class="bash"><code>echo &#39;hello, world&#39; &gt;&gt; test2.txt</code></pre></li>
+</ol>
+<p><strong>Solution:</strong> The first command uses <code>&gt;</code> which directs the output “hello, world” to a file named test1.txt. If that command is run again, new file named test1.txt will be created. The second command uses <code>&gt;&gt;</code> which append the output “hello, world” to a file named test2.txt. If that command is run again, another line of “hello, world” will be appended to the existing test2.txt file.</p>
+<ol start="3" style="list-style-type: decimal">
 <li><p>Using your favorite text editor (e.g., <code>vi</code>), type the following and save the file as <code>middle.sh</code>:</p>
 <pre class="bash"><code>#!/bin/sh
 # Select lines from the middle of a file.
@@ -451,12 +465,12 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 <pre class="bash"><code>./middle.sh pride_and_prejudice.txt 20 5</code></pre>
 <p>Explain the output. Explain the meaning of <code>&quot;$1&quot;</code>, <code>&quot;$2&quot;</code>, and <code>&quot;$3&quot;</code> in this shell script. Why do we need the first line of the shell script?</p></li>
 </ol>
+<p><strong>Solution:</strong> The first line tells Linux to use the ‘sh’ shell to run the commands</p>
 </div>
 <div id="q4.-more-fun-with-linux" class="section level2">
 <h2>Q4. More fun with Linux</h2>
 <p>Try these commands in Bash and interpret the results: <code>cal</code>, <code>cal 2021</code>, <code>cal 9 1752</code> (anything unusual?), <code>date</code>, <code>hostname</code>, <code>arch</code>, <code>uname -a</code>, <code>uptime</code>, <code>who am i</code>, <code>who</code>, <code>w</code>, <code>id</code>, <code>last | head</code>, <code>echo {con,pre}{sent,fer}{s,ed}</code>, <code>time sleep 5</code>, <code>history | tail</code>.</p>
-<div id="solution" class="section level5">
-<h5>Solution:</h5>
+<p><strong>Solution:</strong></p>
 <p><code>cal</code> displays the current month’s calendar</p>
 <pre class="bash"><code>cal</code></pre>
 <pre><code>##     January 2021    
@@ -512,7 +526,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 ## 24 25 26 27 28 29 30</code></pre>
 <p><code>date</code> displays the current date and time in UTC</p>
 <pre class="bash"><code>date</code></pre>
-<pre><code>## Fri Jan 15 19:32:28 UTC 2021</code></pre>
+<pre><code>## Wed Jan 20 00:30:22 UTC 2021</code></pre>
 <p><code>hostname</code> displays the name of the current system</p>
 <pre class="bash"><code>hostname</code></pre>
 <pre><code>## ucla-biostat-203b</code></pre>
@@ -524,7 +538,7 @@ head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;</code></pre>
 <pre><code>## Linux ucla-biostat-203b 3.10.0-1160.6.1.el7.x86_64 #1 SMP Tue Nov 17 13:59:11 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</code></pre>
 <p><code>uptime</code> displays how long the system has been running, the current time, the number users currently logged-in, and the average system load for the last 1, 5, and 15 minutes</p>
 <pre class="bash"><code>uptime</code></pre>
-<pre><code>##  19:32:28 up 11 days, 21:43,  0 users,  load average: 0.05, 0.03, 0.05</code></pre>
+<pre><code>##  00:30:23 up 16 days,  2:41, 11 users,  load average: 0.37, 0.35, 0.33</code></pre>
 <p><code>who am i</code> returns nothing, but if you omit the spaces <code>whoami</code> displays the current user’s user name</p>
 <pre class="bash"><code>who am i
 
@@ -532,33 +546,55 @@ whoami</code></pre>
 <pre><code>## avila.analissa</code></pre>
 <p><code>who</code> displays a information about each user who is currently logged-in. The information includes: user name, terminal name, login time, and remote host</p>
 <pre class="bash"><code>who</code></pre>
+<pre><code>## jihcai   pts/4        2021-01-19 18:36 (ip68-6-101-100.sb.sd.cox.net)
+## andyliugraduateschool pts/7        2021-01-19 22:56 (c-65-50-147-213.hs.gigamonster.net)
+## pdgeraldo pts/11       2021-01-19 23:13 (131.179.156.37)
+## huazhou  pts/12       2021-01-19 23:14 (108-64-58-205.lightspeed.irvnca.sbcglobal.net)
+## jtan.smeltzer pts/13       2021-01-19 23:14 (131.179.158.26)
+## kmishimoto pts/15       2021-01-19 23:15 (ip174-67-246-239.oc.oc.cox.net)
+## filipovicmilan271 pts/16       2021-01-19 23:18 (ip70-181-107-212.oc.oc.cox.net)
+## tibbe1td pts/17       2021-01-19 23:15 (c-68-55-91-32.hsd1.mi.comcast.net)
+## linyuzhou pts/18       2021-01-19 23:16 (s-169-232-70-224.resnet.ucla.edu)
+## valentina214 pts/23       2021-01-19 23:59 (47.156.178.126)
+## asburysean pts/25       2021-01-20 00:03 (c-73-25-154-169.hsd1.or.comcast.net)</code></pre>
 <p><code>w</code> displays the <code>uptime</code> information as a header, along with more/better formatted information about who is currently logged-in. The current user information includes: user name, terminal name, remote host, login time, idle time, JCPU time, PCPU time, and command line of their current process</p>
 <pre class="bash"><code>w</code></pre>
-<pre><code>##  19:32:28 up 11 days, 21:43,  0 users,  load average: 0.05, 0.03, 0.05
-## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT</code></pre>
+<pre><code>##  00:30:23 up 16 days,  2:41, 11 users,  load average: 0.37, 0.35, 0.33
+## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+## jihcai   pts/4    ip68-6-101-100.s 18:36    3:59m  0.66s  0.58s -bash
+## andyliug pts/7    c-65-50-147-213. 22:56   47:51   0.01s  0.01s -bash
+## pdgerald pts/11   131.179.156.37   23:13   52:39   0.07s  0.07s -bash
+## huazhou  pts/12   108-64-58-205.li 23:14   43:35   0.13s  0.13s -bash
+## jtan.sme pts/13   131.179.158.26   23:14   37:27   0.08s  0.08s -bash
+## kmishimo pts/15   ip174-67-246-239 23:15    7.00s  0.22s  0.22s -bash
+## filipovi pts/16   ip70-181-107-212 23:18   27:35   0.07s  0.07s -bash
+## tibbe1td pts/17   c-68-55-91-32.hs 23:15    1:15m  0.02s  0.02s -bash
+## linyuzho pts/18   s-169-232-70-224 23:16    1:11m  0.02s  0.02s -bash
+## valentin pts/23   47.156.178.126   23:59   30:35   0.01s  0.01s -bash
+## asburyse pts/25   c-73-25-154-169. 00:03   24:15   0.01s  0.01s -bash</code></pre>
 <p><code>id</code> displays the real and effective user and group id’s for the current user</p>
 <pre class="bash"><code>id</code></pre>
 <pre><code>## uid=1003(avila.analissa) gid=1005(avila.analissa) groups=1005(avila.analissa) context=system_u:system_r:initrc_t:s0</code></pre>
 <p><code>last | head</code> displays the first 10 lines of the list of all users who have logged in and out of the system (starting with the most recent user to login). The list includes the user’s name, terminal, remote host, and login and logout time.</p>
 <pre class="bash"><code>last | head</code></pre>
-<pre><code>## jdverajo pts/3        181.199.46.0     Fri Jan 15 18:08 - 18:26  (00:18)    
-## jdverajo pts/2        181.199.46.0     Fri Jan 15 17:55 - 18:27  (00:31)    
-## jdverajo pts/1        181.199.46.0     Fri Jan 15 17:35 - 18:26  (00:51)    
-## mia.chen pts/0        154.17.13.54     Fri Jan 15 14:00 - 14:31  (00:30)    
-## mia.chen pts/0        131.179.158.23   Fri Jan 15 11:26 - 11:49  (00:23)    
-## hunanzho pts/1        47.145.211.101   Fri Jan 15 06:55 - 08:14  (01:18)    
-## hunanzho pts/0        47.145.211.101   Fri Jan 15 06:31 - 08:15  (01:43)    
-## ajedward pts/0        cpe-98-149-10-21 Fri Jan 15 02:56 - 03:20  (00:23)    
-## mia.chen pts/1        131.179.156.36   Fri Jan 15 02:17 - 03:49  (01:32)    
-## buwenson pts/2        066-215-070-170. Fri Jan 15 01:43 - 01:43  (00:00)</code></pre>
+<pre><code>## asburyse pts/25       c-73-25-154-169. Wed Jan 20 00:03   still logged in   
+## valentin pts/23       47.156.178.126   Tue Jan 19 23:59   still logged in   
+## kmli     pts/6        ip68-110-213-196 Tue Jan 19 23:46 - 00:01  (00:14)    
+## yingyanw pts/21       s-164-67-81-28.r Tue Jan 19 23:38 - 00:07  (00:28)    
+## wzdbruin pts/22       112.32.12.243    Tue Jan 19 23:34 - 23:41  (00:07)    
+## zianzhua pts/21       110.88.97.219    Tue Jan 19 23:33 - 23:34  (00:01)    
+## filipovi pts/16       ip70-181-107-212 Tue Jan 19 23:18   still logged in   
+## linyuzho pts/18       s-169-232-70-224 Tue Jan 19 23:16   still logged in   
+## tibbe1td pts/17       c-68-55-91-32.hs Tue Jan 19 23:15   still logged in   
+## valentin pts/16       47.156.178.126   Tue Jan 19 23:15 - 23:16  (00:01)</code></pre>
 <p><code>echo {con,pre}{sent,fer}{s,ed}</code> prints all 8 words that are created by sequentially joining one element from each bracketed set. For example, combining the first element of each bracketed set gives the word ‘consents’</p>
 <pre class="bash"><code>echo {con,pre}{sent,fer}{s,ed}</code></pre>
 <pre><code>## consents consented confers confered presents presented prefers prefered</code></pre>
 <p><code>time sleep 5</code> this command tells the system to pause for 5 seconds and then print the time it took for the command to run (which should be very close to 5 seconds)</p>
 <pre class="bash"><code>time sleep 5</code></pre>
 <pre><code>## 
-## real 0m5.003s
-## user 0m0.001s
+## real 0m5.002s
+## user 0m0.000s
 ## sys  0m0.002s</code></pre>
 <p><code>history | tail</code> this command should display the last 10 lines of the user’s command history (note you have to enable history or the command will return nothing). Since <code>history | tail</code> is the only command in this chunck, it is the only command returned</p>
 <pre class="bash"><code>## first enable history
@@ -566,7 +602,6 @@ set -o history
 
 history | tail</code></pre>
 <pre><code>##     1  history | tail</code></pre>
-</div>
 </div>
 
 
