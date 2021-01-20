@@ -116,17 +116,18 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     ```
 Display the number of lines in each data file using a similar loop.
 
-    **Solution:** 
-    This script prints detailed information on all compressed files (.gz) inside the `core` folder
+    **Solution:**  
     ```{bash}
+    ## This script prints detailed information on all compressed files (.gz) inside the `core` folder
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
       do
         ls -l $datafile
       done
     ```
 
-    This script prints the number of lines in each data file in the `core` folder
+    
     ```{bash}
+    ## This script prints the number of lines in each data file in the `core` folder
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
       do
         echo "$(zcat $datafile | wc -l) $datafile"
@@ -136,48 +137,52 @@ Display the number of lines in each data file using a similar loop.
   
 5. Display the first few lines of `admissions.csv.gz`. How many rows are in this data file? How many unique patients (identified by `subject_id`) are in this data file? What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, `language`, `marital_status`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq`, `wc`, and so on.)
 
-**Solution:**  
-```{bash}
- ##### DATA FILE: 'admissions.csv.gz' #####
-
-## display first few lines
-echo "first few lines:"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | head
-
-## number of rows
-echo "number of rows:"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | wc -l
-
-## number of unique patients
-echo "number of unique patients:"
-#zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz |
-
-## possible values of taken by `admission_type` and their count
-echo "counts and values of 'admission_type':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $6}' | sort | uniq -c
-
-## possible values of taken by `admission_location` and their count
-echo "counts and values of 'admission_location':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $7}' | sort | uniq -c
-
-## possible values of taken by `insurance` and their count
-echo "counts and values of 'insurance':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $9}' | sort | uniq -c
-
-## possible values of taken by `language` and their count
-echo "counts and values of 'language':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $10}' | sort | uniq -c
-
-## possible values of taken by `marital_status` and their count
-echo "counts and values of 'marital_status':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $11}' | sort | uniq -c
-
-## possible values of taken by `ethnicity` and their count
-echo "counts and values of 'ethnicity':"
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $12}' | sort | uniq -c
-
-```
-
+    **Solution:**  
+    First few lines of `admissions.csv.gz`
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | head
+    ```
+    
+    Number of rows in `admissions.csv.gz`
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | wc -l
+    ```
+    
+    Number of unique patients in `admissions.csv.gz`
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $1}' | sort | uniq | wc -l
+    ```
+    
+    Possible values taken by `admission_type` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $6}' | sort | uniq -c
+    ```
+    
+    Possible values taken by `admission_location` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $7}' | sort | uniq -c
+    ```
+    
+    Possible values taken by `insurance` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $9}' | sort | uniq -c
+    ```
+    
+    Possible values taken by `language` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $10}' | sort | uniq -c
+    ```
+    
+    Possible values taken by `marital_status` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $11}' | sort | uniq -c
+    ```
+    
+    Possible values taken by `ethnicity` and their counts
+    ```{bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $12}' | sort | uniq -c
+    ```
+    
 
 
 ## Q3. Who's popular in Price and Prejudice
