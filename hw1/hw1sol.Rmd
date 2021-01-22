@@ -81,32 +81,13 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
     
     The bash commands `zcat`, `zless`, `zmore`, and `zgrep` are equivalent to `cat`, `less`, `more` and `grep`, but they operate on the uncompressed contents of compressed files.  
     
-    `zcat` prints the contents of the compressed file 
-    ```{bash}
-    ## functionality of 'zcat'
-    zcat --help
-    ```
-    
-    `zless` browses a compressed text file screen by screen (upwards or downwards)  
-    ```{bash}
-    ## functionality of 'zless'
-    zless --help
-    ```
-    
-    `zmore`browses a compressed text file screen by screen (only downwards)  
-    ```{bash}
-    ## functionality of 'zmore'
-    zmore --help
-    ```
-    
-    `zgrep`prints lines of a compressed file that match an expression
-    ```{bash}
-    ## functionality of 'zgrep'
-    zgrep --help
-    ```
-  
-  
-  
+    `zcat` prints the contents of the compressed file   
+    `zless` browses a compressed text file screen by screen (upwards or downwards)    
+    `zmore`browses a compressed text file screen by screen (only downwards)    
+    `zgrep`prints lines of a compressed file that match an expression  
+      
+      
+      
 4. What's the output of following bash script?
     ```{bash, eval=F}
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
@@ -117,17 +98,16 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
 Display the number of lines in each data file using a similar loop.
 
     **Solution:**  
+    This script prints detailed information on all compressed files (.gz) inside the `core` folder
     ```{bash}
-    ## This script prints detailed information on all compressed files (.gz) inside the `core` folder
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
       do
         ls -l $datafile
       done
     ```
 
-    
+    This script prints the number of lines in each data file in the `core` folder
     ```{bash}
-    ## This script prints the number of lines in each data file in the `core` folder
     for datafile in /usr/203b-data/mimic-iv/core/*.gz
       do
         echo "$(zcat $datafile | wc -l) $datafile"
@@ -150,37 +130,44 @@ Display the number of lines in each data file using a similar loop.
     
     Number of unique patients in `admissions.csv.gz`
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $1}' | sort | uniq | wc -l
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $1}' | sort | uniq | wc -l
     ```
     
     Possible values taken by `admission_type` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $6}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $6}' | sort | uniq -c
     ```
     
     Possible values taken by `admission_location` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $7}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $7}' | sort | uniq -c
     ```
     
     Possible values taken by `insurance` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $9}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $9}' | sort | uniq -c
     ```
     
     Possible values taken by `language` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $10}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $10}' | sort | uniq -c
     ```
     
     Possible values taken by `marital_status` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $11}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $11}' | sort | uniq -c
     ```
     
     Possible values taken by `ethnicity` and their counts
     ```{bash}
-    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F ',' '{print $12}' | sort | uniq -c
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+    awk -F ',' '{print $12}' | sort | uniq -c
     ```
     
 

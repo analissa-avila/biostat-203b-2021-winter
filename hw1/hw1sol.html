@@ -455,71 +455,27 @@ ls -l /usr/203b-data/mimic-iv/icu
 ## -rw-r--r--. 1 huazhou huazhou   35300863 Jan 11 02:25 outputevents.csv.gz
 ## -rw-r--r--. 1 huazhou huazhou   19362097 Jan 11 02:14 procedureevents.csv.gz</code></pre>
 <p>The bash commands <code>zcat</code>, <code>zless</code>, <code>zmore</code>, and <code>zgrep</code> are equivalent to <code>cat</code>, <code>less</code>, <code>more</code> and <code>grep</code>, but they operate on the uncompressed contents of compressed files.</p>
-<p><code>zcat</code> prints the contents of the compressed file</p>
-<pre class="bash"><code>## functionality of &#39;zcat&#39;
-zcat --help</code></pre>
-<pre><code>## Usage: /usr/bin/zcat [OPTION]... [FILE]...
-## Uncompress FILEs to standard output.
-## 
-##   -f, --force       force; read compressed data even from a terminal
-##   -l, --list        list compressed file contents
-##   -q, --quiet       suppress all warnings
-##   -r, --recursive   operate recursively on directories
-##   -S, --suffix=SUF  use suffix SUF on compressed files
-##   -t, --test        test compressed file integrity
-##   -v, --verbose     verbose mode
-##       --help        display this help and exit
-##       --version     display version information and exit
-## 
-## With no FILE, or when FILE is -, read standard input.
-## 
-## Report bugs to &lt;bug-gzip@gnu.org&gt;.</code></pre>
-<p><code>zless</code> browses a compressed text file screen by screen (upwards or downwards)</p>
-<pre class="bash"><code>## functionality of &#39;zless&#39;
-zless --help</code></pre>
-<pre><code>## Usage: /usr/bin/zless [OPTION]... [FILE]...
-## Like &#39;less&#39;, but operate on the uncompressed contents of any compressed FILEs.
-## 
-## Options are the same as for &#39;less&#39;.
-## 
-## Report bugs to &lt;bug-gzip@gnu.org&gt;.</code></pre>
-<p><code>zmore</code>browses a compressed text file screen by screen (only downwards)</p>
-<pre class="bash"><code>## functionality of &#39;zmore&#39;
-zmore --help</code></pre>
-<pre><code>## Usage: /usr/bin/zmore [OPTION]... [FILE]...
-## Like &#39;more&#39;, but operate on the uncompressed contents of any compressed FILEs.
-## 
-## Report bugs to &lt;bug-gzip@gnu.org&gt;.</code></pre>
-<p><code>zgrep</code>prints lines of a compressed file that match an expression</p>
-<pre class="bash"><code>## functionality of &#39;zgrep&#39;
-zgrep --help</code></pre>
-<pre><code>## Usage: /usr/bin/zgrep [OPTION]... [-e] PATTERN [FILE]...
-## Look for instances of PATTERN in the input FILEs, using their
-## uncompressed contents if they are compressed.
-## 
-## OPTIONs are the same as for &#39;grep&#39;, except that the following &#39;grep&#39;
-## options are not supported: --dereference-recursive (-R), --directories (-d),
-## --exclude, --exclude-from, --exclude-dir, --include, --null (-Z),
-## --null-data (-z), and --recursive (-r).
-## 
-## Report bugs to &lt;bug-gzip@gnu.org&gt;.</code></pre></li>
+<p><code>zcat</code> prints the contents of the compressed file<br />
+<code>zless</code> browses a compressed text file screen by screen (upwards or downwards)<br />
+<code>zmore</code>browses a compressed text file screen by screen (only downwards)<br />
+<code>zgrep</code>prints lines of a compressed file that match an expression</p></li>
 <li><p>What’s the output of following bash script?</p>
 <pre class="bash"><code>for datafile in /usr/203b-data/mimic-iv/core/*.gz
   do
     ls -l $datafile
   done</code></pre>
 <p>Display the number of lines in each data file using a similar loop.</p>
-<p><strong>Solution:</strong></p>
-<pre class="bash"><code>## This script prints detailed information on all compressed files (.gz) inside the `core` folder
-for datafile in /usr/203b-data/mimic-iv/core/*.gz
+<p><strong>Solution:</strong><br />
+This script prints detailed information on all compressed files (.gz) inside the <code>core</code> folder</p>
+<pre class="bash"><code>for datafile in /usr/203b-data/mimic-iv/core/*.gz
   do
     ls -l $datafile
   done</code></pre>
 <pre><code>## -rw-r--r--. 1 huazhou huazhou 17224843 Jan 11 01:55 /usr/203b-data/mimic-iv/core/admissions.csv.gz
 ## -rw-r--r--. 1 huazhou huazhou 2884996 Jan 11 01:54 /usr/203b-data/mimic-iv/core/patients.csv.gz
 ## -rw-r--r--. 1 huazhou huazhou 51188147 Jan 11 01:55 /usr/203b-data/mimic-iv/core/transfers.csv.gz</code></pre>
-<pre class="bash"><code>## This script prints the number of lines in each data file in the `core` folder
-for datafile in /usr/203b-data/mimic-iv/core/*.gz
+<p>This script prints the number of lines in each data file in the <code>core</code> folder</p>
+<pre class="bash"><code>for datafile in /usr/203b-data/mimic-iv/core/*.gz
   do
     echo &quot;$(zcat $datafile | wc -l) $datafile&quot;
   done</code></pre>
@@ -544,10 +500,12 @@ First few lines of <code>admissions.csv.gz</code></p>
 <pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | wc -l</code></pre>
 <pre><code>## 524521</code></pre>
 <p>Number of unique patients in <code>admissions.csv.gz</code></p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $1}&#39; | sort | uniq | wc -l</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $1}&#39; | sort | uniq | wc -l</code></pre>
 <pre><code>## 257366</code></pre>
 <p>Possible values taken by <code>admission_type</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $6}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $6}&#39; | sort | uniq -c</code></pre>
 <pre><code>##    7259 AMBULATORY OBSERVATION
 ##   21595 DIRECT EMER.
 ##   20014 DIRECT OBSERVATION
@@ -558,7 +516,8 @@ First few lines of <code>admissions.csv.gz</code></p>
 ##   41103 SURGICAL SAME DAY ADMISSION
 ##   47970 URGENT</code></pre>
 <p>Possible values taken by <code>admission_location</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $7}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $7}&#39; | sort | uniq -c</code></pre>
 <pre><code>##   60437 
 ##     191 AMBULATORY SURGERY TRANSFER
 ##   10678 CLINIC REFERRAL
@@ -572,23 +531,27 @@ First few lines of <code>admissions.csv.gz</code></p>
 ##    4069 TRANSFER FROM SKILLED NURSING FACILITY
 ##   16715 WALK-IN/SELF REFERRAL</code></pre>
 <p>Possible values taken by <code>insurance</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $9}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $9}&#39; | sort | uniq -c</code></pre>
 <pre><code>##   50962 Medicaid
 ##  171492 Medicare
 ##  302066 Other</code></pre>
 <p>Possible values taken by <code>language</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $10}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $10}&#39; | sort | uniq -c</code></pre>
 <pre><code>##   46231 ?
 ##  478289 ENGLISH</code></pre>
 <p>Possible values taken by <code>marital_status</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $11}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $11}&#39; | sort | uniq -c</code></pre>
 <pre><code>##   66133 
 ##   33762 DIVORCED
 ##  195326 MARRIED
 ##  180453 SINGLE
 ##   48846 WIDOWED</code></pre>
 <p>Possible values taken by <code>ethnicity</code> and their counts</p>
-<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | awk -F &#39;,&#39; &#39;{print $12}&#39; | sort | uniq -c</code></pre>
+<pre class="bash"><code>zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | tail -n +2 | \
+awk -F &#39;,&#39; &#39;{print $12}&#39; | sort | uniq -c</code></pre>
 <pre><code>##    1536 AMERICAN INDIAN/ALASKA NATIVE
 ##   24522 ASIAN
 ##   80526 BLACK/AFRICAN AMERICAN
@@ -707,7 +670,7 @@ The first line tells Linux to use the ‘sh’ shell to run the commands</p></li
 ## 24 25 26 27 28 29 30</code></pre>
 <p><code>date</code> displays the current date and time in UTC</p>
 <pre class="bash"><code>date</code></pre>
-<pre><code>## Wed Jan 20 07:19:50 UTC 2021</code></pre>
+<pre><code>## Fri Jan 22 00:58:55 UTC 2021</code></pre>
 <p><code>hostname</code> displays the name of the current system</p>
 <pre class="bash"><code>hostname</code></pre>
 <pre><code>## ucla-biostat-203b</code></pre>
@@ -719,7 +682,7 @@ The first line tells Linux to use the ‘sh’ shell to run the commands</p></li
 <pre><code>## Linux ucla-biostat-203b 3.10.0-1160.6.1.el7.x86_64 #1 SMP Tue Nov 17 13:59:11 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</code></pre>
 <p><code>uptime</code> displays how long the system has been running, the current time, the number users currently logged-in, and the average system load for the last 1, 5, and 15 minutes</p>
 <pre class="bash"><code>uptime</code></pre>
-<pre><code>##  07:19:51 up 16 days,  9:30,  1 user,  load average: 0.35, 0.22, 0.15</code></pre>
+<pre><code>##  00:58:55 up 18 days,  3:09,  8 users,  load average: 1.81, 1.48, 1.58</code></pre>
 <p><code>who am i</code> returns nothing, but if you omit the spaces <code>whoami</code> displays the current user’s user name</p>
 <pre class="bash"><code>who am i
 
@@ -727,27 +690,41 @@ whoami</code></pre>
 <pre><code>## avila.analissa</code></pre>
 <p><code>who</code> displays a information about each user who is currently logged-in. The information includes: user name, terminal name, login time, and remote host</p>
 <pre class="bash"><code>who</code></pre>
-<pre><code>## jtan.smeltzer pts/0        2021-01-20 07:10 (cpe-172-115-102-86.socal.res.rr.com)</code></pre>
+<pre><code>## jyixzhou pts/0        2021-01-22 00:13 (cpe84948c862443-cm84948c862440.cpe.net.fido.ca)
+## wzdbruins318 pts/5        2021-01-22 00:56 (112.32.10.108)
+## filipovicmilan271 pts/7        2021-01-21 06:03 (110.3.236.35.bc.googleusercontent.com)
+## germc3   pts/8        2021-01-21 22:27 (cpe-172-117-252-49.socal.res.rr.com)
+## spendlove.sj pts/13       2021-01-21 23:35 (cpe-172-117-248-147.socal.res.rr.com)
+## elviscuihan pts/15       2021-01-22 00:51 (115.206.116.237)
+## haoyunj  pts/17       2021-01-22 00:46 (101.93.71.50)
+## germc3   pts/18       2021-01-22 00:43 (cpe-172-117-252-49.socal.res.rr.com)</code></pre>
 <p><code>w</code> displays the <code>uptime</code> information as a header, along with more/better formatted information about who is currently logged-in. The current user information includes: user name, terminal name, remote host, login time, idle time, JCPU time, PCPU time, and command line of their current process</p>
 <pre class="bash"><code>w</code></pre>
-<pre><code>##  07:19:51 up 16 days,  9:30,  1 user,  load average: 0.35, 0.22, 0.15
+<pre><code>##  00:58:55 up 18 days,  3:09,  8 users,  load average: 1.81, 1.48, 1.58
 ## USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
-## jtan.sme pts/0    cpe-172-115-102- 07:10    9:27   0.02s  0.02s -bash</code></pre>
+## jyixzhou pts/0    cpe84948c862443- 00:13   43:35   0.04s  0.04s -bash
+## wzdbruin pts/5    112.32.10.108    00:56    1:03   0.04s  0.04s -bash
+## filipovi pts/7    110.3.236.35.bc. Thu06   18:49m  0.06s  0.06s -bash
+## germc3   pts/8    cpe-172-117-252- 22:27   15:59   0.15s  0.15s -bash
+## spendlov pts/13   cpe-172-117-248- 23:35    1:22m  0.04s  0.00s gzip -dc -- /usr/203b-data/mimic-iv/core/admissions.csv.gz
+## elviscui pts/15   115.206.116.237  00:51    7.00s  0.09s  0.09s -bash
+## haoyunj  pts/17   101.93.71.50     00:46   10:47   0.04s  0.04s -bash
+## germc3   pts/18   cpe-172-117-252- 00:43   39.00s  0.09s  0.09s -bash</code></pre>
 <p><code>id</code> displays the real and effective user and group id’s for the current user</p>
 <pre class="bash"><code>id</code></pre>
 <pre><code>## uid=1003(avila.analissa) gid=1005(avila.analissa) groups=1005(avila.analissa) context=system_u:system_r:initrc_t:s0</code></pre>
 <p><code>last | head</code> displays the first 10 lines of the list of all users who have logged in and out of the system (starting with the most recent user to login). The list includes the user’s name, terminal, remote host, and login and logout time.</p>
 <pre class="bash"><code>last | head</code></pre>
-<pre><code>## jtan.sme pts/0        cpe-172-115-102- Wed Jan 20 07:10   still logged in   
-## jihcai   pts/0        ip68-6-101-100.s Wed Jan 20 03:59 - 05:25  (01:25)    
-## alvinw   pts/4        cpe-172-112-186- Wed Jan 20 01:30 - 01:30  (00:00)    
-## jyixzhou pts/11       cpe84948c862443- Wed Jan 20 01:17 - 02:16  (00:58)    
-## avila.an pts/11       108-75-116-179.l Wed Jan 20 01:09 - 01:13  (00:03)    
-## wzdbruin pts/4        112.32.12.243    Wed Jan 20 00:59 - 01:24  (00:25)    
-## asburyse pts/25       c-73-25-154-169. Wed Jan 20 00:03 - 03:33  (03:30)    
-## valentin pts/23       47.156.178.126   Tue Jan 19 23:59 - 02:29  (02:29)    
-## kmli     pts/6        ip68-110-213-196 Tue Jan 19 23:46 - 00:01  (00:14)    
-## yingyanw pts/21       s-164-67-81-28.r Tue Jan 19 23:38 - 00:07  (00:28)</code></pre>
+<pre><code>## wzdbruin pts/5        112.32.10.108    Fri Jan 22 00:56   still logged in   
+## zianzhua pts/5        110.88.97.219    Fri Jan 22 00:52 - 00:53  (00:00)    
+## elviscui pts/15       115.206.116.237  Fri Jan 22 00:51   still logged in   
+## haoyunj  pts/17       101.93.71.50     Fri Jan 22 00:46   still logged in   
+## germc3   pts/18       cpe-172-117-252- Fri Jan 22 00:43   still logged in   
+## jihcai   pts/17       ip68-6-101-100.s Fri Jan 22 00:34 - 00:43  (00:09)    
+## elviscui pts/16       115.206.116.237  Fri Jan 22 00:28 - 00:50  (00:22)    
+## kmishimo pts/16       ip174-67-246-239 Fri Jan 22 00:22 - 00:25  (00:03)    
+## jyixzhou pts/0        cpe84948c862443- Fri Jan 22 00:13   still logged in   
+## spendlov pts/13       cpe-172-117-248- Thu Jan 21 23:35   still logged in</code></pre>
 <p><code>echo {con,pre}{sent,fer}{s,ed}</code> prints all 8 words that are created by sequentially joining one element from each bracketed set. For example, combining the first element of each bracketed set gives the word ‘consents’</p>
 <pre class="bash"><code>echo {con,pre}{sent,fer}{s,ed}</code></pre>
 <pre><code>## consents consented confers confered presents presented prefers prefered</code></pre>
