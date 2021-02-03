@@ -50,17 +50,17 @@ In this homework, we stick to the tidyverse.
 #### Solution:
 Reading `admissions.csv.gz` using `read.csv`
 ```{r}
-system.time(read.csv(paste(mimic_p, "/core/admissions.csv.gz", sep = "")))
+system.time(read.csv(str_c(mimic_p, "/core/admissions.csv.gz")))
 ```
 
 Reading `admissions.csv.gz` using `read_csv`
 ```{r}
-system.time(read_csv(paste(mimic_p, "/core/admissions.csv.gz", sep = "")))
+system.time(read_csv(str_c(mimic_p, "/core/admissions.csv.gz")))
 ```
 
 Reading `admissions.csv.gz` using `fread`
 ```{r}
-system.time(fread(paste(mimic_p, "/core/admissions.csv.gz", sep = "")))
+system.time(fread(str_c(mimic_p, "/core/admissions.csv.gz")))
 ```
 The `read_csv` function is about 10 times faster than the `read.csv` function. The `fread` function is the fastest, being about twice as fast as the `read_csv` function.
 
@@ -79,10 +79,11 @@ The `read_csv` function is about 10 times faster than the `read.csv` function. T
 
 Read in icustays
 ```{r}
-icustays_tab <- read_csv(paste(mimic_p, "/icu/icustays.csv.gz", sep = "")) %>%
+icustays_tab <- read_csv(str_c(mimic_p, "/icu/icustays.csv.gz")) %>%
   print(width = Inf)
 
 ```
+
 How many unique `stay_id`
 ```{r}
 icustays_tab %>%
@@ -90,7 +91,7 @@ icustays_tab %>%
   summarise(n_unique_stay_id = n())
 ```
 
-How many unique `subject_id`
+How many unique `subject_id`: one patient can have more than one ICU stay
 ```{r}
 icustays_tab %>%
   distinct(subject_id) %>%
@@ -99,6 +100,11 @@ icustays_tab %>%
 
 Distribution of length of ICU stay: summary statistics
 ```{r}
+ggplot(data = icustays_tab) + 
+  geom_bar(mapping = aes(x = los)) +
+  xlab("Length of stay (days)") +
+  ylab("Count")
+
 options(pillar.sigfig = 5) #set number of significant figures to include when knit tibble
 
 icustays_tab %>% 
@@ -108,6 +114,8 @@ icustays_tab %>%
              median = round(median(los), 2),
              IQR = round(IQR(los), 2),
              max = round(max(los), 2))
+
+
 ```
 
 Distribution of first ICU unit: bar graph and frequency table
@@ -168,6 +176,18 @@ Information of the patients admitted into hospital is available in `ADMISSION.cs
 
 Note it is possible that one patient (uniquely identified by the `SUBJECT_ID`) is admitted into hospital multiple times. When summarizing some demographic information, it makes sense to summarize based on unique patients. 
 
+
+#### Solution:
+
+Read in admissions
+```{r}
+admissions_tab <- read_csv(str_c(mimic_p, "/core/admissions.csv.gz")) %>%
+  print(width = Inf)
+
+```
+
+
+
 ## Q5. `patient` data
 
 Explore `patients.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/core/patients/>) and summarize following variables using appropriate numerics and graphs:  
@@ -175,11 +195,58 @@ Explore `patients.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/core/patients
 - `gender`  
 - `anchor_age` (explain pattern you see)
 
+
+#### Soultion: 
+
+Read in patients
+```{r}
+patients_tab <- read_csv(str_c(mimic_p, "/core/patients.csv.gz")) %>%
+  print(width = Inf)
+
+```
+
 ## Q6. Lab results
 
 `labevents.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/hosp/labevents/>) contains all laboratory measurements for patients. 
 
-We are interested in the lab measurements of creatinine, potassium, sodium, chloride, bicarbonate, hematocrit, white blood cell count, glucose, magnesium, calcium, phosphorus, and lactate. Find the `itemid`s of these lab measurements from `d_labitems.csv.gz` and retrieve a subset of `labevents.csv.gz` only containing these items.
+We are interested in the lab measurements of creatinine (50912), potassium (50971), sodium (50983), chloride (50902), bicarbonate (50882), hematocrit (51221), white blood cell count (51301), glucose (50931), magnesium (50960), calcium (50893), and lactate (50813). Find the `itemid`s of these lab measurements from `d_labitems.csv.gz` and retrieve a subset of `labevents.csv.gz` only containing these items.
+
+
+#### Soultion: 
+
+Read in lab events
+```{r}
+if(!file.exists("labevents_icustays.csv.gz")){
+  system.time(labevents_tab <- 
+                fread(str_c(mimic_p, "/hosp/labevents.csv.gz"),
+                      select = c("subject_id", "hadm_id", "itemid", "charttime", "valuenum"), 
+                      nThread = 4))
+  labevents_tab %>%
+    semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
+    fwrite("labevents_icustays.csv.gz", nThread = 4)
+}
+
+system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
+labevents_tab %>%
+  as.tibble() %>%
+  print(width = Inf)
+
+```
+
+Read in the lab item dictionary
+```{r}
+dlabitems_tab <- read_csv(str_c(mimic_p, "/hosp/d_items.csv.gz")) %>%
+  print(width = Inf)
+```
+
+Subset to lab measurements of interest
+ - rename itemid = lab_itemid
+```{r}
+itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931, 50960, 50893, 50813)
+
+
+```
+
 
 ## Q7. Vitals from chartered events
 
@@ -200,6 +267,24 @@ and columns contains at least following variables
 
 - all variables in `icustays.csv.gz`  
 - all variables in `admission.csv.gz`  
-- first lab measurements during ICU stay  
-- first vitals measurement during ICU stay  
+- first lab measurements during ICU stay  (for each lab meas.)
+- first vitals measurement during ICU stay  (for each vitals meas.)
 - an indicator variable whether the patient died within 30 days of hospital admission  
+
+
+```{r}
+icustays_tab_first <- icustays_tab %>% 
+  #subset to first ICU stay of each unique patient
+  group_by(subject_id) %>%
+  slice_min(intime) %>%
+  #merge with admissions and patients data
+  left_join(admissions_tab, by = c("subject_id", "hadm_id")) %>%
+  left_join(patients_tab, by = "subject_id") %>%
+  #subset to adults (patients age >=18 at admission)
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
+  filter(age_at_adm >= 18) %>%
+  print(width = Inf)
+  
+
+
+```
