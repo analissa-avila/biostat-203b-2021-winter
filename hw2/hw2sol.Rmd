@@ -1,7 +1,7 @@
 ---
 title: "Biostat 203B Homework 2 Solutions"
 author: Analissa Avila
-subtitle: Due Feb 5 @ 11:59PM
+subtitle: Due Feb 10 @ 11:59PM
 output: 
   html_document:
     toc: true
@@ -84,42 +84,45 @@ icustays_tab <- read_csv(str_c(mimic_p, "/icu/icustays.csv.gz")) %>%
 
 ```
 
-How many unique `stay_id`
+*How many unique `stay_id`*
 ```{r}
 icustays_tab %>%
   distinct(stay_id) %>%
   summarise(n_unique_stay_id = n())
 ```
 
-How many unique `subject_id`: one patient can have more than one ICU stay
+*How many unique `subject_id`:* a patient can have more than one ICU stay
 ```{r}
 icustays_tab %>%
   distinct(subject_id) %>%
   summarise(n_unique_subject_id = n())
 ```
 
-Distribution of length of ICU stay: summary statistics
+*Distribution of length of ICU stay:* histogram and summary statistics  
+The lenght of ICU stay ranges from 0.03 to 599.25 days. The median length of stay is 2.06 days with 75% of stays lasting 4.2 days or less.
 ```{r}
 ggplot(data = icustays_tab) + 
-  geom_bar(mapping = aes(x = los)) +
+  geom_histogram(mapping = aes(x = los), bins=200) +
   xlab("Length of stay (days)") +
   ylab("Count")
 
 options(pillar.sigfig = 5) #set number of significant figures to include when knit tibble
 
 icustays_tab %>% 
-  summarise( min = round(min(los), 2),
-             mean = round(mean(los), 2),
-             sd = round(sd(los), 2),
-             median = round(median(los), 2),
-             IQR = round(IQR(los), 2),
-             max = round(max(los), 2))
+  summarise(min = round(min(los), 2),
+            mean = round(mean(los), 2),
+            sd = round(sd(los), 2),
+            Q1 = round(quantile(los, .25), 2),
+            median = round(median(los), 2),
+            Q3 = round(quantile(los, .75), 2),
+            max = round(max(los), 2))
 
 
 ```
 
-Distribution of first ICU unit: bar graph and frequency table
-```{r}
+*Distribution of first ICU unit:* bar graph and frequency table  
+The medical intensive care unit is the most common first ICU unit
+```{r, message=FALSE}
 ggplot(data = icustays_tab) + 
   geom_bar(mapping = aes(y = first_careunit)) +
   ggtitle("Distribution of First ICU Unit") +
@@ -135,8 +138,9 @@ icustays_tab %>%
   mutate(percent = round(count/sum(count)*100, 2))
 ```
 
-Distribution of last ICU unit: bar graph and frequency table
-```{r}
+*Distribution of last ICU unit:* bar graph and frequency table  
+The medical intensive care unit is the most common last ICU unit
+```{r, message=FALSE}
 ggplot(data = icustays_tab) + 
   geom_bar(mapping = aes(y = last_careunit)) +
   ggtitle("Distribution of Last ICU Unit") +
@@ -184,6 +188,203 @@ Read in admissions
 admissions_tab <- read_csv(str_c(mimic_p, "/core/admissions.csv.gz")) %>%
   print(width = Inf)
 
+```
+*Summarizing admission year*  
+From about the years 2130 to 2190, the number of admissions are fairly constant. There were less admission both before and after these years.
+```{r}
+admissions_tab %>% 
+  count(admityear = year(admittime)) %>% 
+  ggplot(aes(x = admityear, y = n)) + 
+  geom_line() +
+  xlab("admission year") +
+  ylab("count") +
+  scale_x_continuous(breaks = seq(2110, 2210, 20))
+```
+
+*Summarizing admission month*  
+Admissions are fairly evenly distributed across all months. February has the least number of admissions, which may be due to it being the shortest month.
+```{r}
+admissions_tab %>% 
+  mutate(admitmonth = month(admittime, label = TRUE, abbr = FALSE)) %>% 
+  ggplot(aes(x = admitmonth)) + 
+  geom_bar() +
+  xlab("admission month") +
+  ylab("count") +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+*Summarizing admission month day*  
+Admissions are fairly evenly distributed across the first 28 days of the any month. The 29th, 30th, and 31st of any month have less admissions. This is possibly explained by the fact that not every month has those days.
+```{r}
+admissions_tab %>% 
+  count(admitmonth_day = mday(admittime)) %>% 
+  ggplot(aes(x = admitmonth_day, y = n)) + 
+  geom_line() +
+  xlab("admission month day") +
+  ylab("count") +
+  scale_x_continuous(breaks = seq(0, 30, 5))
+```
+
+*Summarizing admission week day*  
+Admissions are fairly evenly distributed across all week days. It seems that their are slightly more admissions on Saturdays.
+```{r}
+admissions_tab %>% 
+  mutate(admitweek_day = wday(admittime, label = TRUE, abbr = FALSE)) %>% 
+  ggplot(aes(x = admitweek_day)) + 
+  geom_bar() +
+  xlab("admission week day") +
+  ylab("count") 
+```
+
+*Summarizing admission hour*  
+Admissions are most frequent around midnight with a steady decline until about 6:00am. The admission then increase from 6:00-7:00am before decreasing again until about 9:00am. From 9:00am to about 6:00pm admissions are steadily increasing. They then began to decrease again from 6:00pm to 11:00pm.
+```{r}
+admissions_tab %>% 
+  count(admithour = hour(admittime)) %>% 
+  ggplot(aes(x = admithour, y = n)) + 
+  geom_line() +
+  xlab("admission hour") +
+  ylab("count") +
+  scale_x_continuous(breaks = seq(0, 23, 4))
+```
+
+*Summarizing number of deaths in each year*  
+The number of deaths each year mostly increases between 2105 to about 2130. The number of deaths then fluctuates between about 100 and 140 until around 2189 before decreasing again. 
+```{r, message=FALSE}
+admissions_tab %>%
+  mutate(admityear = year(admittime)) %>%
+  group_by(admityear) %>%
+  summarise(n_deaths = sum(hospital_expire_flag)) %>%
+  ggplot(aes(x = admityear, y = n_deaths)) +
+  geom_line() +
+  xlab("admission year") +
+  ylab("number of deaths") +
+  scale_x_continuous(breaks = seq(2110, 2210, 20)) +
+  scale_y_continuous(breaks = seq(0, 150, 20))
+```
+*Summarizing admission type*  
+EW emergency is the most frequent admission type and ambulatory observation is the least frequent.
+```{r}
+admissions_tab %>%
+  ggplot(aes(y = admission_type)) +
+  geom_bar() +
+  ylab("admission type")
+```
+
+*Summarizing number of admissions per patient*  
+The number of admissions per patient ranges from 1 to 238. The median number of admissions per patient is 3, with 75% of patients having 7 or less admissions. 
+```{r, message=FALSE}
+admissions_tab %>%
+  group_by(subject_id) %>%
+  summarise(n_admissions = n()) %>%
+  ggplot(aes(x = n_admissions)) +
+  geom_histogram(bins = 100) + 
+  xlab("number of admissions per patient") +
+  scale_x_continuous(breaks = seq(0, 250, 25))
+
+admissions_tab %>%
+  group_by(subject_id) %>%
+  mutate(n_admissions = n()) %>%
+  ungroup(subject_id) %>%
+  summarise(min = round(min(n_admissions), 2),
+            mean = round(mean(n_admissions), 2),
+            sd = round(sd(n_admissions), 2),
+            Q1 = round(quantile(n_admissions, .25), 2),
+            median = round(median(n_admissions), 2),
+            Q3 = round(quantile(n_admissions, .75), 2),
+            max = round(max(n_admissions), 2))
+
+```
+
+*Summarizing admission location*  
+The vast majority of admissions were via the emergency room. Admissions via physician referral is the next most common. 
+```{r}
+admissions_tab %>%
+  ggplot(aes(y = admission_location)) +
+  geom_bar() +
+  ylab("admission location")
+```
+
+*Summarizing discharge location*  
+The most frequent discharge location is home. The next most common discharge locations are not available, home health center, and skilled nursing facility.
+```{r}
+admissions_tab %>%
+  ggplot(aes(y = discharge_location)) +
+  geom_bar() +
+  ylab("discharge location")
+```
+
+*Summarizing insurance*  
+Since a patient can have more than one type of insurance across admissions, I did not summarize based on unique patients.  
+Insurances other than mediacare and medicade are most frequently used. Medicare is more frequently used than medicaid.
+```{r}
+# check if patient can have more than one type of insurance
+admissions_tab %>%
+  group_by(subject_id) %>%
+  mutate(n_insurance_pt = n_distinct(insurance)) %>%
+  ungroup(subject_id) %>%
+  summarise(min = min(n_insurance_pt),
+            max = max(n_insurance_pt))
+
+admissions_tab %>%
+  ggplot(aes(y = insurance)) +
+  geom_bar() +
+  ylab("insurance") +
+  scale_x_continuous(labels = scales::comma)
+```
+
+*Summarizing language*  
+I summarized each patients reported language at their *first* admission. There are only two possible language values: English and ? (unknown). English is much more frequent than unknown.
+```{r}
+# subset data to only include first admission records for each patient
+admissions_tab_first <- admissions_tab %>%
+  group_by(subject_id) %>%
+  slice(which.min(admittime))
+
+admissions_tab_first %>%
+  ggplot(aes(x = language)) +
+  geom_bar()
+
+```
+
+*Summarizing marital status*  
+I summarized each patients reported marital status at their *first* admission. Married is the most frequent status and divorced is the least frequent.
+```{r}
+admissions_tab_first %>%
+  ggplot(aes(x = marital_status)) +
+  geom_bar() +
+  xlab("marital status")
+```
+
+*Summarizing ethnicity*  
+I summarized each patients reported ethnicity at their *first* admission. White is by far the most frequent ethnicity and American Indian/Alaska Native is the least common.
+```{r}
+admissions_tab_first %>%
+  ggplot(aes(y = ethnicity)) +
+  geom_bar()
+```
+
+*Summarizing death*  
+There are 7 patients with more than 1 death record (i.e. more than 1 hospitalization in which the patient was flagged as having died).  
+
+```{r}
+#number of patients with more than 1 death record
+admissions_tab %>%
+  group_by(subject_id) %>%
+  mutate(death = sum(hospital_expire_flag)) %>%
+  filter(death > 1) %>%
+  distinct(subject_id) %>%
+  ungroup(subject_id) %>%
+  summarise(n_multiple_death_records = n())
+  
+View(admissions_tab %>%
+  group_by(subject_id) %>%
+  mutate(death = sum(hospital_expire_flag)) %>%
+  filter(death > 0 & !is.na(deathtime)))
+  #ungroup(subject_id) %>%
+  #summarise(n_multiple_death_records = n())
+
+  
 ```
 
 
@@ -285,6 +486,4 @@ icustays_tab_first <- icustays_tab %>%
   filter(age_at_adm >= 18) %>%
   print(width = Inf)
   
-
-
 ```
