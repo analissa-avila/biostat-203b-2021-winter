@@ -365,7 +365,9 @@ admissions_tab_first %>%
 ```
 
 *Summarizing death*  
-There are 7 patients with more than 1 death record (i.e. more than 1 hospitalization in which the patient was flagged as having died).  
+I summarized death as whether or not each patient had survived up to their *last* discharge time.  
+There are 7 patients with more than 1 death record (i.e. more than 1 hospitalization in which the patient was flagged as having died). There are 12 patients who have a reported death, but a missing death time.  
+The graph shows that the vast majority of people did not day during any hospitaliztion.
 
 ```{r}
 #number of patients with more than 1 death record
@@ -376,15 +378,26 @@ admissions_tab %>%
   distinct(subject_id) %>%
   ungroup(subject_id) %>%
   summarise(n_multiple_death_records = n())
-  
-View(admissions_tab %>%
+
+#number of death records with a missing deathtime  
+admissions_tab %>%
   group_by(subject_id) %>%
   mutate(death = sum(hospital_expire_flag)) %>%
-  filter(death > 0 & !is.na(deathtime)))
-  #ungroup(subject_id) %>%
-  #summarise(n_multiple_death_records = n())
-
+  filter(hospital_expire_flag == 1 & is.na(deathtime)) %>%
+  distinct(subject_id) %>%
+  ungroup(subject_id) %>%
+  summarise(n_no_deathtime = n())  
   
+
+#histogram of death indicator  
+admissions_tab %>%
+  group_by(subject_id) %>%
+  mutate(death = sum(hospital_expire_flag)) %>%
+  mutate(death = ifelse(death == 0, "survived", "died")) %>%
+  slice(which.max(dischtime)) %>%
+  ungroup(subject_id) %>%
+  ggplot(aes(x = death)) +
+  geom_bar()
 ```
 
 
@@ -403,8 +416,25 @@ Read in patients
 ```{r}
 patients_tab <- read_csv(str_c(mimic_p, "/core/patients.csv.gz")) %>%
   print(width = Inf)
-
 ```
+
+*Summarizing gender*  
+There are slightly more females than males in the `patient` data set.
+```{r}
+patients_tab %>%
+  ggplot(aes(x = gender)) +
+  geom_bar() +
+  scale_x_discrete(labels = c("Female", "Male"))
+```
+*Summarizing anchor age*  
+A majority of patients were age 0 in their anchor year. There were no patients ages 1-17 in their anchor year. The oldest anchor age is 91.
+```{r}
+patients_tab %>%
+  ggplot(aes(x = anchor_age)) +
+  geom_histogram(bins = 200) +
+  scale_x_continuous(breaks = seq(0, 100, 10))
+```
+
 
 ## Q6. Lab results
 
