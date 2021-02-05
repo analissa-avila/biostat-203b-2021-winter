@@ -426,13 +426,24 @@ patients_tab %>%
   geom_bar() +
   scale_x_discrete(labels = c("Female", "Male"))
 ```
+
 *Summarizing anchor age*  
-A majority of patients were age 0 in their anchor year. There were no patients ages 1-17 in their anchor year. The oldest anchor age is 91.
+A majority of patients were age 0 in their anchor year. There were no patients ages 1-17 in their anchor year. 
+The anchor age of 0 may be used to denote missing data, therefore I filtered out anchor ages of zero and created a new graph. These anchor ages span from 18 to 91. 
 ```{r}
 patients_tab %>%
   ggplot(aes(x = anchor_age)) +
-  geom_histogram(bins = 200) +
-  scale_x_continuous(breaks = seq(0, 100, 10))
+  geom_histogram(bins = 30) +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  xlab("anchor age (years)")
+
+#filter out anchor age of 0
+patients_tab %>%
+  filter(anchor_age > 0) %>%
+  ggplot(aes(x = anchor_age)) +
+  geom_histogram(bins = 30) +
+  scale_x_continuous(breaks = seq(0, 100, 10)) + 
+  xlab("anchor age (years)")
 ```
 
 
@@ -450,7 +461,8 @@ Read in lab events
 if(!file.exists("labevents_icustays.csv.gz")){
   system.time(labevents_tab <- 
                 fread(str_c(mimic_p, "/hosp/labevents.csv.gz"),
-                      select = c("subject_id", "hadm_id", "itemid", "charttime", "valuenum"), 
+                      select = c("subject_id", "hadm_id", "itemid", 
+                                 "charttime", "valuenum"), 
                       nThread = 4))
   labevents_tab %>%
     semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
@@ -466,14 +478,15 @@ labevents_tab %>%
 
 Read in the lab item dictionary
 ```{r}
-dlabitems_tab <- read_csv(str_c(mimic_p, "/hosp/d_items.csv.gz")) %>%
+dlabitems_tab <- read_csv(str_c(mimic_p, "/hosp/d_labitems.csv.gz")) %>%
   print(width = Inf)
 ```
 
 Subset to lab measurements of interest
  - rename itemid = lab_itemid
 ```{r}
-itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931, 50960, 50893, 50813)
+itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 
+                 50931, 50960, 50893, 50813)
 
 
 ```
@@ -481,11 +494,44 @@ itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 50931, 50960, 
 
 ## Q7. Vitals from chartered events
 
-We are interested in the vitals for ICU patients: heart rate, mean and systolic blood pressure (invasive and noninvasive measurements combined), body temperature, SpO2, and respiratory rate.
+We are interested in the vitals for ICU patients: heart rate, mean and systolic blood pressure (invasive and noninvasive measurements combined), body temperature, SpO2, and respiratory rate. Find the `itemid`s of these vitals from `d_items.csv.gz` and retrieve a subset of `chartevents.csv.gz` only containing these items.
 
-`chartevents.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `ITEMID` variable indicates a single measurement type in the database. The `VALUE` variable is the value measured for `ITEMID`. 
+`chartevents.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`.
 
-`d_items.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/d_items/>) is the dictionary for the `ITEMID` in `CHARTEVENTS.csv`. Find potential values of `ITEMID` that correspond to systolic blood pressure, i.e., `LABEL` contains the string `systolic`. 
+`d_items.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/d_items/>) is the dictionary for the `itemid` in `chartevents.csv.gz`. 
+
+Read in chart events
+```{r}
+if(!file.exists("chartevents_icustays.csv.gz")){
+  system.time(chartevents_tab <- 
+                fread(str_c(mimic_p, "/icu/chartevents.csv.gz"),
+                      select = c("subject_id", "hadm_id", "itemid", 
+                                 "charttime", "valuenum"), 
+                      nThread = 4))
+  chartevents_tab %>%
+    semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
+    fwrite("chartevents_icustays.csv.gz", nThread = 4)
+}
+
+system.time(chartevents_tab <- fread("chartevents_icustays.csv.gz"))
+chartevents_tab %>%
+  as.tibble() %>%
+  print(width = Inf)
+
+```
+
+Read in the chart item dictionary
+```{r}
+ditems_tab <- read_csv(str_c(mimic_p, "/icu/d_items.csv.gz")) %>%
+  print(width = Inf)
+```
+
+Get relevant `itemid`s for vitals
+```{r}
+
+
+
+```
 
 ## Q8. Putting things together
 
@@ -494,14 +540,14 @@ Let us create a tibble for all ICU stays, where rows are
 - first ICU stay of each unique patient  
 - adults (age at admission > 18)  
 
-and columns contains at least following variables  
+and columns contain at least following variables  
 
 - all variables in `icustays.csv.gz`  
 - all variables in `admission.csv.gz`  
-- first lab measurements during ICU stay  (for each lab meas.)
-- first vitals measurement during ICU stay  (for each vitals meas.)
+- all variables in `patients.csv.gz`  
+- first lab measurements during ICU stay  
+- first vitals measurement during ICU stay  
 - an indicator variable whether the patient died within 30 days of hospital admission  
-
 
 ```{r}
 icustays_tab_first <- icustays_tab %>% 
