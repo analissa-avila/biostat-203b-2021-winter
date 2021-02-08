@@ -249,19 +249,60 @@ admissions_tab %>%
 ```
 
 *Summarizing number of deaths in each year*  
+The `admissions` data dictionary states that discharge time and death time should be the same, but may differ due to typographical errors. We first look at these to variables to see which we should use to determine death time.  
+  
+Among patients who died at the hospital, 7 are flagged as having died in two separate hospitalizations (i.e. `hospital_expire_flag` = 1) 
+```{r}
+admissions_tab %>%
+  filter(hospital_expire_flag == 1) %>%
+  group_by(subject_id) %>%
+  mutate(n_death_records = n_distinct(hadm_id)) %>%
+  filter(n_death_records > 1) %>%
+  select(subject_id, dischtime, deathtime ,n_death_records)
+```
+
+Among hospitalizations records in which the patient died, none are missing the discharge time but 13 (from 12 unique patients) are missing the death time. 
+```{r}
+#missing discharge time
+admissions_tab %>%
+  filter(hospital_expire_flag == 1 & is.na(dischtime)) %>%
+  select(subject_id, dischtime)
+
+#missing death time
+admissions_tab %>%
+  filter(hospital_expire_flag == 1 & is.na(deathtime)) %>%
+  select(subject_id, deathtime)
+```
+
+Discharge time and death time discrepancies:  
+In addition to the 13 missing death times, there are 634 discrepant discharge and death times.  In all 634 cases, *only the time is discrepant*. The dates are exactly the same. *Since the dates are the same in both variables and `dischtime` does not have any missing values, we will use `dischtime` to analyze death dates*.
+```{r}
+#number of discrepant cases
+admissions_tab %>%
+  filter(dischtime != deathtime) %>%
+  summarise(n_discrepancies = n())
+
+#number of discrepant cases with different dates
+admissions_tab %>%
+  filter(date(dischtime) != date(deathtime)) %>%
+  summarise(n_discrepant_dates = n())
+
+```
+
 The number of deaths each year mostly increases between 2105 to about 2130. The number of deaths then fluctuates between about 100 and 140 until around 2189 before decreasing again. 
 ```{r, message=FALSE}
 admissions_tab %>%
-  mutate(admityear = year(admittime)) %>%
-  group_by(admityear) %>%
+  mutate(deathyear = year(dischtime)) %>%
+  group_by(deathyear) %>%
   summarise(n_deaths = sum(hospital_expire_flag)) %>%
-  ggplot(aes(x = admityear, y = n_deaths)) +
+  ggplot(aes(x = deathyear, y = n_deaths)) +
   geom_line() +
-  xlab("admission year") +
+  xlab("year") +
   ylab("number of deaths") +
   scale_x_continuous(breaks = seq(2110, 2210, 20)) +
   scale_y_continuous(breaks = seq(0, 150, 20))
 ```
+
 *Summarizing admission type*  
 EW emergency is the most frequent admission type and ambulatory observation is the least frequent.
 ```{r}
@@ -366,29 +407,9 @@ admissions_tab_first %>%
 
 *Summarizing death*  
 I summarized death as whether or not each patient had survived up to their *last* discharge time.  
-There are 7 patients with more than 1 death record (i.e. more than 1 hospitalization in which the patient was flagged as having died). There are 12 patients who have a reported death, but a missing death time.  
-The graph shows that the vast majority of people did not day during any hospitaliztion.
+The graph shows that the vast majority of people did not day during any hospitalization.
 
 ```{r}
-#number of patients with more than 1 death record
-admissions_tab %>%
-  group_by(subject_id) %>%
-  mutate(death = sum(hospital_expire_flag)) %>%
-  filter(death > 1) %>%
-  distinct(subject_id) %>%
-  ungroup(subject_id) %>%
-  summarise(n_multiple_death_records = n())
-
-#number of death records with a missing deathtime  
-admissions_tab %>%
-  group_by(subject_id) %>%
-  mutate(death = sum(hospital_expire_flag)) %>%
-  filter(hospital_expire_flag == 1 & is.na(deathtime)) %>%
-  distinct(subject_id) %>%
-  ungroup(subject_id) %>%
-  summarise(n_no_deathtime = n())  
-  
-
 #histogram of death indicator  
 admissions_tab %>%
   group_by(subject_id) %>%
@@ -441,7 +462,7 @@ patients_tab %>%
 patients_tab %>%
   filter(anchor_age > 0) %>%
   ggplot(aes(x = anchor_age)) +
-  geom_histogram(bins = 30) +
+  geom_histogram(bins = 25) +
   scale_x_continuous(breaks = seq(0, 100, 10)) + 
   xlab("anchor age (years)")
 ```
@@ -469,6 +490,22 @@ if(!file.exists("labevents_icustays.csv.gz")){
     fwrite("labevents_icustays.csv.gz", nThread = 4)
 }
 
+```
+
+Subset to lab measurements of interest. 
+```{r}
+if(!file.exists("labevents_icustays.csv.gz")){
+  # relevant item ids
+  itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301,
+                   50931, 50960, 50893, 50813)
+  
+  #subset to relevant items only
+  labevents_tab %>%
+    filter(itemid %in% itemid_list) %>%
+    mutate(charttime = ymd_hms(charttime)) %>%
+    fwrite("labevents_icustays.csv.gz", nThread = 4)
+}
+
 system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
 labevents_tab %>%
   as.tibble() %>%
@@ -476,21 +513,27 @@ labevents_tab %>%
 
 ```
 
-Read in the lab item dictionary
+Per question 8, we only need the first lab measurements during an ICU stay. Therefore, we subset to first lab measurements during each stay.
 ```{r}
-dlabitems_tab <- read_csv(str_c(mimic_p, "/hosp/d_labitems.csv.gz")) %>%
+labevents_tab <- labevents_tab %>%
+  group_by_at(vars(hadm_id, itemid)) %>%
+  slice(which.min(charttime)) %>%
+  select(-charttime) %>%
+  spread(key = itemid, value = valuenum) %>%
+  rename(creatinine = "50912",
+         potassium = "50971",
+         sodium = "50983",
+         chloride = "50902",
+         bicarbonate = "50882",
+         hematocrit = "51221",
+         WBC_count = "51301",
+         glucose = "50931",
+         magnesium = "50960",
+         calcium = "50893",
+         lactate = "50813") %>%
   print(width = Inf)
-```
-
-Subset to lab measurements of interest
- - rename itemid = lab_itemid
-```{r}
-itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301, 
-                 50931, 50960, 50893, 50813)
-
 
 ```
-
 
 ## Q7. Vitals from chartered events
 
@@ -499,6 +542,9 @@ We are interested in the vitals for ICU patients: heart rate, mean and systolic 
 `chartevents.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/chartevents/>) contains all the charted data available for a patient. During their ICU stay, the primary repository of a patient’s information is their electronic chart. The `itemid` variable indicates a single measurement type in the database. The `value` variable is the value measured for `itemid`.
 
 `d_items.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/d_items/>) is the dictionary for the `itemid` in `chartevents.csv.gz`. 
+
+
+#### Soultion: 
 
 Read in chart events
 ```{r}
@@ -528,8 +574,17 @@ ditems_tab <- read_csv(str_c(mimic_p, "/icu/d_items.csv.gz")) %>%
 
 Get relevant `itemid`s for vitals
 ```{r}
+chart_list <- c("Heart Rate", "Temperature Fahrenheit", "SpO2 Desat Limit",
+                "Respiratory Rate")
 
+ditems_tab_sub <- ditems_tab %>%
+  filter(label %in% chart_list)
 
+## Non Invasive Blood Pressure systolic, Manual Blood Pressure Systolic (Right/Left), Arterial Blood Pressure systolic, ART BP systolic - WHICH ONE?
+
+## Non Invasive Blood Pressure mean, Mean BP (VAD), Arterial Blood Pressure mean, ART BP mean, IABP Mean, HM II- Mean BP - WHICH ONE?
+
+#RR (set), RR(sponaneous), RR(total) -- WHICH ONE?
 
 ```
 
@@ -549,7 +604,19 @@ and columns contain at least following variables
 - first vitals measurement during ICU stay  
 - an indicator variable whether the patient died within 30 days of hospital admission  
 
+#### Solution:
+- vitals ?
+- `admittime` to death OR icu `intime` to death?
 ```{r}
+# get death time for each patient that died
+death_tab <- admissions_tab %>% group_by(subject_id) %>%
+  filter(hospital_expire_flag ==1) %>%
+  mutate(died = 1,
+         death_time = last(dischtime)) %>%
+  slice(which.max(dischtime)) %>%
+  select(subject_id, died, death_time)
+
+# create desired data set
 icustays_tab_first <- icustays_tab %>% 
   #subset to first ICU stay of each unique patient
   group_by(subject_id) %>%
@@ -560,6 +627,18 @@ icustays_tab_first <- icustays_tab %>%
   #subset to adults (patients age >=18 at admission)
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
   filter(age_at_adm >= 18) %>%
+  #merge with first lab measurements data
+  left_join(labevents_tab, by = c("subject_id", "hadm_id")) %>%
+  #merge with death data
+  left_join(death_tab, by = "subject_id") %>%
+  mutate(died = ifelse(is.na(died), 0, died),
+         #time from admission to death
+         days_admit_death = difftime(date(death_time), date(admittime), 
+                                  units = "days"),
+         #indicator: died within 30 days of admission
+         died_in_30days = ifelse(days_admit_death > 30 | 
+                                   is.na(days_admit_death), 0, 1)) %>%
   print(width = Inf)
   
 ```
+
