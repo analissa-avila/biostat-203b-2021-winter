@@ -226,7 +226,7 @@ admissions_tab %>%
 ```
 
 *Summarizing admission week day*  
-Admissions are fairly evenly distributed across all week days. It seems that their are slightly more admissions on Saturdays.
+Admissions are fairly evenly distributed across all week days. It seems that there are slightly more admissions on Saturdays.
 ```{r}
 admissions_tab %>% 
   mutate(admitweek_day = wday(admittime, label = TRUE, abbr = FALSE)) %>% 
@@ -548,21 +548,21 @@ We are interested in the vitals for ICU patients: heart rate, mean and systolic 
 
 Read in chart events
 ```{r}
-if(!file.exists("chartevents_icustays.csv.gz")){
-  system.time(chartevents_tab <- 
-                fread(str_c(mimic_p, "/icu/chartevents.csv.gz"),
-                      select = c("subject_id", "hadm_id", "itemid", 
-                                 "charttime", "valuenum"), 
-                      nThread = 4))
-  chartevents_tab %>%
-    semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
-    fwrite("chartevents_icustays.csv.gz", nThread = 4)
-}
-
-system.time(chartevents_tab <- fread("chartevents_icustays.csv.gz"))
-chartevents_tab %>%
-  as.tibble() %>%
-  print(width = Inf)
+# if(!file.exists("chartevents_icustays.csv.gz")){
+#   system.time(chartevents_tab <- 
+#                 fread(str_c(mimic_p, "/icu/chartevents.csv.gz"),
+#                       select = c("subject_id", "hadm_id", "itemid", 
+#                                  "charttime", "valuenum"), 
+#                       nThread = 4))
+#   chartevents_tab %>%
+#     semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
+#     fwrite("chartevents_icustays.csv.gz", nThread = 4)
+# }
+# 
+# system.time(chartevents_tab <- fread("chartevents_icustays.csv.gz"))
+# chartevents_tab %>%
+#   as.tibble() %>%
+#   print(width = Inf)
 
 ```
 
