@@ -480,6 +480,8 @@ We are interested in the lab measurements of creatinine (50912), potassium (5097
 
 Read in `labevents`
 ```{r}
+final.lab.file <- TRUE
+
 if(!file.exists("labevents_icustays.csv.gz")){
   system.time(labevents_tab <- 
                 fread(str_c(mimic_p, "/hosp/labevents.csv.gz"),
@@ -487,28 +489,37 @@ if(!file.exists("labevents_icustays.csv.gz")){
                                  "charttime", "valuenum"), 
                       nThread = 4))
   labevents_tab %>%
-    semi_join(icustays_tab, by = c("subject_id", "hadm_id"))
+    semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
+    fwrite("labevents_icustays.csv.gz", nThread = 4)
+
+  final.lab.file <- FALSE
 }
 ```
 
 Subset to lab measurements of interest. 
 ```{r}
-if(!file.exists("labevents_icustays.csv.gz")){
+if(final.lab.file == FALSE){
   # relevant item ids
   itemid_list <- c(50912, 50971, 50983, 50902, 50882, 51221, 51301,
                    50931, 50960, 50893, 50813)
   
+  system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
+  
   #subset to relevant items only
   labevents_tab %>%
+    as_tibble() %>%
     filter(itemid %in% itemid_list) %>%
-    mutate(charttime = ymd_hms(charttime))
+    mutate(charttime = ymd_hms(charttime)) %>%
+    fwrite("labevents_icustays.csv.gz", nThread = 4)
+  
+  final.lab.file <- FALSE
 }
 ```
 
 Per question 8, I subset to only include the first lab measurements during the first icu stay for each patient.  
 Transform data to wide layout, so that each lab item has its own column.
 ```{r}
-if(!file.exists("labevents_icustays.csv.gz")){
+if(final.lab.file == FALSE){
   #subset to first icu stay for each patient and keep selected columns
   icustays_tab_sub <- icustays_tab %>%
     select(c(subject_id:stay_id, intime)) %>%
@@ -516,6 +527,8 @@ if(!file.exists("labevents_icustays.csv.gz")){
     group_by(subject_id) %>%
     slice_min(intime)
   
+  system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
+
   #subset to first measurements during ICU stay and keep selected columns
   labevents_tab %>%
     #merge with subset icu data
@@ -527,6 +540,8 @@ if(!file.exists("labevents_icustays.csv.gz")){
     select(-c(charttime, stay_id, intime)) %>%
     #save as csv
     fwrite("labevents_icustays.csv.gz", nThread = 4)
+  
+  final.lab.file == TRUE
 }
 
 #Read in subset `labevents` data
@@ -565,6 +580,8 @@ Read in `chartevents`
 ```{r}
 mimic_derived_p <- "/usr/203b-data/mimic-iv-derived-data"
 
+final.chart.file <- TRUE
+
 if(!file.exists("chartevents_filtered.csv.gz")){
   system.time(chart_tab <- fread(str_c(mimic_derived_p,
                                        "/chartevents_filtered_itemid.csv.gz"),
@@ -578,7 +595,10 @@ if(!file.exists("chartevents_filtered.csv.gz")){
   chart_tab %>%
     as_tibble() %>%
     mutate_at(c("subject_id", "hadm_id", "stay_id"), as.numeric) %>%
-    mutate(charttime = ymd_hms(charttime))
+    mutate(charttime = ymd_hms(charttime)) %>%
+    fwrite("chartevents_filtered.csv.gz", nThread = 4)
+  
+  final.chart.file <- FALSE
 }
 ```
 
@@ -623,7 +643,7 @@ Instead, I just need to read in the pre-filtered `chartevents` data set.
 Per question 8, I subset to only include the first vitals measurements during the first icu stay for each patient.  
 Transform data to wide layout, so that each chart item has its own column.
 ```{r}
-if(!file.exists("chartevents_filtered.csv.gz")){
+if(final.chart.file == FALSE){
   
   #subset to first icu stay for each patient and keep selected columns
   icustays_tab_sub <- icustays_tab %>%
@@ -644,6 +664,8 @@ if(!file.exists("chartevents_filtered.csv.gz")){
     select(-c(charttime, intime)) %>%
     #save as csv
     fwrite("chartevents_filtered.csv.gz", nThread = 4)
+  
+  final.chart.file <- TRUE
 }
 
 #Read in subset `chartevents` data
@@ -682,6 +704,7 @@ and columns contain at least following variables
 #### Solution:
 
 Create tibble as instructed above.  
+**Although the bullet above defines adult as 'age at admission > 18', I'm using the more standard definition of 'age at admission >= 18'**  
 **As noted in Q7, there will not be a column for SpO2 as there was not a corresponding `itemid` in the filtered `chartevents` data set**
 ```{r}
 # get death time for each patient that died
@@ -700,7 +723,7 @@ icustays_tab_first <- icustays_tab %>%
   #merge with admissions and patients data
   left_join(admissions_tab, by = c("subject_id", "hadm_id")) %>%
   left_join(patients_tab, by = "subject_id") %>%
-  #subset to adults (patients age >=18 at admission)
+  #subset to adults (patients age >= 18 at admission)
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
   filter(age_at_adm >= 18) %>%
   #merge with first lab measurements data
@@ -718,4 +741,3 @@ icustays_tab_first <- icustays_tab %>%
                                    is.na(admit_to_death), 0, 1)) %>%
   print(width = Inf)
 ```
-

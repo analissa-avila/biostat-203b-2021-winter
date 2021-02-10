@@ -1105,29 +1105,40 @@ patients_tab %&gt;%
 <div id="soultion-1" class="section level4">
 <h4>Soultion:</h4>
 <p>Read in <code>labevents</code></p>
-<pre class="r"><code>if(!file.exists(&quot;labevents_icustays.csv.gz&quot;)){
+<pre class="r"><code>final.lab.file &lt;- TRUE
+
+if(!file.exists(&quot;labevents_icustays.csv.gz&quot;)){
   system.time(labevents_tab &lt;- 
                 fread(str_c(mimic_p, &quot;/hosp/labevents.csv.gz&quot;),
                       select = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;itemid&quot;, 
                                  &quot;charttime&quot;, &quot;valuenum&quot;), 
                       nThread = 4))
   labevents_tab %&gt;%
-    semi_join(icustays_tab, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;))
+    semi_join(icustays_tab, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
+    fwrite(&quot;labevents_icustays.csv.gz&quot;, nThread = 4)
+
+  final.lab.file &lt;- FALSE
 }</code></pre>
 <p>Subset to lab measurements of interest.</p>
-<pre class="r"><code>if(!file.exists(&quot;labevents_icustays.csv.gz&quot;)){
+<pre class="r"><code>if(final.lab.file == FALSE){
   # relevant item ids
   itemid_list &lt;- c(50912, 50971, 50983, 50902, 50882, 51221, 51301,
                    50931, 50960, 50893, 50813)
   
+  system.time(labevents_tab &lt;- fread(&quot;labevents_icustays.csv.gz&quot;))
+  
   #subset to relevant items only
   labevents_tab %&gt;%
+    as_tibble() %&gt;%
     filter(itemid %in% itemid_list) %&gt;%
-    mutate(charttime = ymd_hms(charttime))
+    mutate(charttime = ymd_hms(charttime)) %&gt;%
+    fwrite(&quot;labevents_icustays.csv.gz&quot;, nThread = 4)
+  
+  final.lab.file &lt;- FALSE
 }</code></pre>
 <p>Per question 8, I subset to only include the first lab measurements during the first icu stay for each patient.<br />
 Transform data to wide layout, so that each lab item has its own column.</p>
-<pre class="r"><code>if(!file.exists(&quot;labevents_icustays.csv.gz&quot;)){
+<pre class="r"><code>if(final.lab.file == FALSE){
   #subset to first icu stay for each patient and keep selected columns
   icustays_tab_sub &lt;- icustays_tab %&gt;%
     select(c(subject_id:stay_id, intime)) %&gt;%
@@ -1135,6 +1146,8 @@ Transform data to wide layout, so that each lab item has its own column.</p>
     group_by(subject_id) %&gt;%
     slice_min(intime)
   
+  system.time(labevents_tab &lt;- fread(&quot;labevents_icustays.csv.gz&quot;))
+
   #subset to first measurements during ICU stay and keep selected columns
   labevents_tab %&gt;%
     #merge with subset icu data
@@ -1146,12 +1159,14 @@ Transform data to wide layout, so that each lab item has its own column.</p>
     select(-c(charttime, stay_id, intime)) %&gt;%
     #save as csv
     fwrite(&quot;labevents_icustays.csv.gz&quot;, nThread = 4)
+  
+  final.lab.file == TRUE
 }
 
 #Read in subset `labevents` data
 system.time(labevents_tab &lt;- fread(&quot;labevents_icustays.csv.gz&quot;))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.255   0.047   0.675</code></pre>
+##   0.361   0.084   0.424</code></pre>
 <pre class="r"><code>#Transform to wide layout
 labevents_tab &lt;- labevents_tab %&gt;%
   as_tibble() %&gt;%
@@ -1171,28 +1186,28 @@ labevents_tab &lt;- labevents_tab %&gt;%
 <pre><code>## # A tibble: 49,383 x 13
 ##    subject_id  hadm_id lactate bicarbonate calcium chloride creatinine glucose
 ##         &lt;int&gt;    &lt;int&gt;   &lt;dbl&gt;       &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;
-##  1   14046553 20000094   4              28   9.3         85        3.8     190
-##  2   14990224 20000147   1.5            20  NA          105        0.7     157
-##  3   17913090 20000351  NA              25   9.200      102        0.8     189
-##  4   16058391 20000397  NA              23   9.8        101        1       105
-##  5   16788749 20000808   1.4            22   9.5        105        0.6     156
-##  6   16003661 20001305   2.300          23  11.4        108        0.8     154
-##  7   14577567 20001361   2.7            22   6.3        107        2.5     161
-##  8   15975141 20001494  NA              22   8.6        104        0.9     147
-##  9   17112572 20001687   2.1            25   8.5        109        1       127
-## 10   18921218 20001976   1.7            22   7.7        115        0.9     102
+##  1   14046553 20000094     4            28     9.3       85        3.8     190
+##  2   14990224 20000147     1.5          20    NA        105        0.7     157
+##  3   17913090 20000351    NA            25     9.2      102        0.8     189
+##  4   16058391 20000397    NA            23     9.8      101        1       105
+##  5   16788749 20000808     1.4          22     9.5      105        0.6     156
+##  6   16003661 20001305     2.3          23    11.4      108        0.8     154
+##  7   14577567 20001361     2.7          22     6.3      107        2.5     161
+##  8   15975141 20001494    NA            22     8.6      104        0.9     147
+##  9   17112572 20001687     2.1          25     8.5      109        1       127
+## 10   18921218 20001976     1.7          22     7.7      115        0.9     102
 ##    magnesium potassium sodium hematocrit WBC_count
 ##        &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;
-##  1     2.2       4.600    133       42.1    12.5  
-##  2     2.9       4.600    134       31.8    10.200
-##  3     1.2       3.5      137       39.9     8.6  
-##  4     2         4.8      136       45.5     6.3  
-##  5     1.9       4.8      138       37.9     5.4  
-##  6     2.300     4.3      142       33.4    20.3  
-##  7     2         5.8      137       33.9    20.8  
-##  8     1.6       3.5      139       36.9    19.7  
-##  9     2.4       4.3      145       30.7    10.4  
-## 10     1.9       4.100    146       38.9     7.1  
+##  1       2.2       4.6    133       42.1      12.5
+##  2       2.9       4.6    134       31.8      10.2
+##  3       1.2       3.5    137       39.9       8.6
+##  4       2         4.8    136       45.5       6.3
+##  5       1.9       4.8    138       37.9       5.4
+##  6       2.3       4.3    142       33.4      20.3
+##  7       2         5.8    137       33.9      20.8
+##  8       1.6       3.5    139       36.9      19.7
+##  9       2.4       4.3    145       30.7      10.4
+## 10       1.9       4.1    146       38.9       7.1
 ## # … with 49,373 more rows</code></pre>
 </div>
 </div>
@@ -1205,6 +1220,8 @@ labevents_tab &lt;- labevents_tab %&gt;%
 <h4>Soultion:</h4>
 <p>Read in <code>chartevents</code></p>
 <pre class="r"><code>mimic_derived_p &lt;- &quot;/usr/203b-data/mimic-iv-derived-data&quot;
+
+final.chart.file &lt;- TRUE
 
 if(!file.exists(&quot;chartevents_filtered.csv.gz&quot;)){
   system.time(chart_tab &lt;- fread(str_c(mimic_derived_p,
@@ -1219,7 +1236,10 @@ if(!file.exists(&quot;chartevents_filtered.csv.gz&quot;)){
   chart_tab %&gt;%
     as_tibble() %&gt;%
     mutate_at(c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;), as.numeric) %&gt;%
-    mutate(charttime = ymd_hms(charttime))
+    mutate(charttime = ymd_hms(charttime)) %&gt;%
+    fwrite(&quot;chartevents_filtered.csv.gz&quot;, nThread = 4)
+  
+  final.chart.file &lt;- FALSE
 }</code></pre>
 <p>If I was able to load the original <code>chartevents</code> file, I would use the following code to subset to only the relevant <code>itemid</code>s. (Relevant labels are per Dr. Zhou)</p>
 <p>Read in the chart item dictionary and find relevant <code>itemid</code>s</p>
@@ -1253,7 +1273,7 @@ if(!file.exists(&quot;chartevents_filtered.csv.gz&quot;)){
 <strong>There is not an <code>itemid</code> for SpO2 in this filtered data set. Therefore, SpO2 measurements will not be included in further steps.</strong></p>
 <p>Per question 8, I subset to only include the first vitals measurements during the first icu stay for each patient.<br />
 Transform data to wide layout, so that each chart item has its own column.</p>
-<pre class="r"><code>if(!file.exists(&quot;chartevents_filtered.csv.gz&quot;)){
+<pre class="r"><code>if(final.chart.file == FALSE){
   
   #subset to first icu stay for each patient and keep selected columns
   icustays_tab_sub &lt;- icustays_tab %&gt;%
@@ -1274,12 +1294,14 @@ Transform data to wide layout, so that each chart item has its own column.</p>
     select(-c(charttime, intime)) %&gt;%
     #save as csv
     fwrite(&quot;chartevents_filtered.csv.gz&quot;, nThread = 4)
+  
+  final.chart.file &lt;- TRUE
 }
 
 #Read in subset `chartevents` data
 system.time(chart_tab &lt;- fread(&quot;chartevents_filtered.csv.gz&quot;))</code></pre>
 <pre><code>##    user  system elapsed 
-##   0.139   0.016   0.182</code></pre>
+##   0.228   0.044   0.265</code></pre>
 <pre class="r"><code>#Transform to wide layout
 chart_tab &lt;- chart_tab %&gt;%
   as_tibble() %&gt;%
@@ -1345,6 +1367,7 @@ chart_tab &lt;- chart_tab %&gt;%
 <div id="solution-4" class="section level4">
 <h4>Solution:</h4>
 <p>Create tibble as instructed above.<br />
+<strong>Although the bullet above defines adult as ‘age at admission &gt; 18’, I’m using the more standard definition of ‘age at admission &gt;= 18’</strong><br />
 <strong>As noted in Q7, there will not be a column for SpO2 as there was not a corresponding <code>itemid</code> in the filtered <code>chartevents</code> data set</strong></p>
 <pre class="r"><code># get death time for each patient that died
 death_tab &lt;- admissions_tab %&gt;% group_by(subject_id) %&gt;%
@@ -1362,7 +1385,7 @@ icustays_tab_first &lt;- icustays_tab %&gt;%
   #merge with admissions and patients data
   left_join(admissions_tab, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
   left_join(patients_tab, by = &quot;subject_id&quot;) %&gt;%
-  #subset to adults (patients age &gt;=18 at admission)
+  #subset to adults (patients age &gt;= 18 at admission)
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
   filter(age_at_adm &gt;= 18) %&gt;%
   #merge with first lab measurements data
