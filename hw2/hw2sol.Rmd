@@ -24,7 +24,7 @@ suppressMessages(library(lubridate))
 mimic_p <- "/usr/203b-data/mimic-iv"
 ```
 
-Use tidyverse (ggpot2, dplyr) to explore the [MIMIC-IV](https://mimic-iv.mit.edu) data introduced in [homework 1](https://ucla-biostat203b-2021winter.github.io/hw/hw1/hw1.html).
+Use tidyverse (ggplot2, dplyr) to explore the [MIMIC-IV](https://mimic-iv.mit.edu) data introduced in [homework 1](https://ucla-biostat203b-2021winter.github.io/hw/hw1/hw1.html).
 
 ```{r}
 system(str_c("tree -s -L 2 ", shQuote(mimic_p)), intern = TRUE)
@@ -36,8 +36,8 @@ At this moment, you should already get credentialed on the PhysioNet. Please inc
 
 #### Solution:
 
-<p align="center">
-  <img src="./PhysioNet_credential.PNG" height="450">
+<p align = "center">
+  <img src = "./PhysioNet_credential.PNG" height = "450">
 </p>
 
 
@@ -77,29 +77,28 @@ The `read_csv` function is about 10 times faster than the `read.csv` function. T
 
 #### Solution:
 
-Read in icustays
+Read in `icustays`
 ```{r}
 icustays_tab <- read_csv(str_c(mimic_p, "/icu/icustays.csv.gz")) %>%
   print(width = Inf)
-
 ```
 
-*How many unique `stay_id`*
+**How many unique `stay_id`**
 ```{r}
 icustays_tab %>%
   distinct(stay_id) %>%
   summarise(n_unique_stay_id = n())
 ```
 
-*How many unique `subject_id`:* a patient can have more than one ICU stay
+**How many unique `subject_id`:** a patient can have more than one ICU stay
 ```{r}
 icustays_tab %>%
   distinct(subject_id) %>%
   summarise(n_unique_subject_id = n())
 ```
 
-*Distribution of length of ICU stay:* histogram and summary statistics  
-The lenght of ICU stay ranges from 0.03 to 599.25 days. The median length of stay is 2.06 days with 75% of stays lasting 4.2 days or less.
+**Distribution of length of ICU stay:** histogram and summary statistics  
+The length of ICU stay ranges from 0.03 to 599.25 days. The median length of stay is 2.06 days with 75% of stays lasting 4.2 days or less.
 ```{r}
 ggplot(data = icustays_tab) + 
   geom_histogram(mapping = aes(x = los), bins=200) +
@@ -120,7 +119,7 @@ icustays_tab %>%
 
 ```
 
-*Distribution of first ICU unit:* bar graph and frequency table  
+**Distribution of first ICU unit:** bar graph and frequency table  
 The medical intensive care unit is the most common first ICU unit
 ```{r, message=FALSE}
 ggplot(data = icustays_tab) + 
@@ -138,7 +137,7 @@ icustays_tab %>%
   mutate(percent = round(count/sum(count)*100, 2))
 ```
 
-*Distribution of last ICU unit:* bar graph and frequency table  
+**Distribution of last ICU unit:** bar graph and frequency table  
 The medical intensive care unit is the most common last ICU unit
 ```{r, message=FALSE}
 ggplot(data = icustays_tab) + 
@@ -189,7 +188,8 @@ admissions_tab <- read_csv(str_c(mimic_p, "/core/admissions.csv.gz")) %>%
   print(width = Inf)
 
 ```
-*Summarizing admission year*  
+
+**Summarizing admission year**  
 From about the years 2130 to 2190, the number of admissions are fairly constant. There were less admission both before and after these years.
 ```{r}
 admissions_tab %>% 
@@ -201,7 +201,7 @@ admissions_tab %>%
   scale_x_continuous(breaks = seq(2110, 2210, 20))
 ```
 
-*Summarizing admission month*  
+**Summarizing admission month**  
 Admissions are fairly evenly distributed across all months. February has the least number of admissions, which may be due to it being the shortest month.
 ```{r}
 admissions_tab %>% 
@@ -213,7 +213,7 @@ admissions_tab %>%
   theme(axis.text.x = element_text(angle = 45))
 ```
 
-*Summarizing admission month day*  
+**Summarizing admission month day**  
 Admissions are fairly evenly distributed across the first 28 days of the any month. The 29th, 30th, and 31st of any month have less admissions. This is possibly explained by the fact that not every month has those days.
 ```{r}
 admissions_tab %>% 
@@ -225,7 +225,7 @@ admissions_tab %>%
   scale_x_continuous(breaks = seq(0, 30, 5))
 ```
 
-*Summarizing admission week day*  
+**Summarizing admission week day**  
 Admissions are fairly evenly distributed across all week days. It seems that there are slightly more admissions on Saturdays.
 ```{r}
 admissions_tab %>% 
@@ -236,7 +236,7 @@ admissions_tab %>%
   ylab("count") 
 ```
 
-*Summarizing admission hour*  
+**Summarizing admission hour**  
 Admissions are most frequent around midnight with a steady decline until about 6:00am. The admission then increase from 6:00-7:00am before decreasing again until about 9:00am. From 9:00am to about 6:00pm admissions are steadily increasing. They then began to decrease again from 6:00pm to 11:00pm.
 ```{r}
 admissions_tab %>% 
@@ -248,7 +248,7 @@ admissions_tab %>%
   scale_x_continuous(breaks = seq(0, 23, 4))
 ```
 
-*Summarizing number of deaths in each year*  
+**Summarizing number of deaths in each year**  
 The `admissions` data dictionary states that discharge time and death time should be the same, but may differ due to typographical errors. We first look at these to variables to see which we should use to determine death time.  
   
 Among patients who died at the hospital, 7 are flagged as having died in two separate hospitalizations (i.e. `hospital_expire_flag` = 1) 
@@ -275,7 +275,7 @@ admissions_tab %>%
 ```
 
 Discharge time and death time discrepancies:  
-In addition to the 13 missing death times, there are 634 discrepant discharge and death times.  In all 634 cases, *only the time is discrepant*. The dates are exactly the same. *Since the dates are the same in both variables and `dischtime` does not have any missing values, we will use `dischtime` to analyze death dates*.
+In addition to the 13 missing death times, there are 634 discrepant discharge and death times.  In all 634 cases, **only the time is discrepant**. The dates are exactly the same. *Since the dates are the same in both variables and `dischtime` does not have any missing values, we will use `dischtime` to analyze death dates*.
 ```{r}
 #number of discrepant cases
 admissions_tab %>%
@@ -303,7 +303,7 @@ admissions_tab %>%
   scale_y_continuous(breaks = seq(0, 150, 20))
 ```
 
-*Summarizing admission type*  
+**Summarizing admission type**  
 EW emergency is the most frequent admission type and ambulatory observation is the least frequent.
 ```{r}
 admissions_tab %>%
@@ -312,7 +312,7 @@ admissions_tab %>%
   ylab("admission type")
 ```
 
-*Summarizing number of admissions per patient*  
+**Summarizing number of admissions per patient**  
 The number of admissions per patient ranges from 1 to 238. The median number of admissions per patient is 3, with 75% of patients having 7 or less admissions. 
 ```{r, message=FALSE}
 admissions_tab %>%
@@ -337,7 +337,7 @@ admissions_tab %>%
 
 ```
 
-*Summarizing admission location*  
+**Summarizing admission location**  
 The vast majority of admissions were via the emergency room. Admissions via physician referral is the next most common. 
 ```{r}
 admissions_tab %>%
@@ -346,7 +346,7 @@ admissions_tab %>%
   ylab("admission location")
 ```
 
-*Summarizing discharge location*  
+**Summarizing discharge location**  
 The most frequent discharge location is home. The next most common discharge locations are not available, home health center, and skilled nursing facility.
 ```{r}
 admissions_tab %>%
@@ -355,9 +355,9 @@ admissions_tab %>%
   ylab("discharge location")
 ```
 
-*Summarizing insurance*  
+**Summarizing insurance**  
 Since a patient can have more than one type of insurance across admissions, I did not summarize based on unique patients.  
-Insurances other than mediacare and medicade are most frequently used. Medicare is more frequently used than medicaid.
+Insurances other than medicare and medicaid are most frequently used. Medicare is more frequently used than medicaid.
 ```{r}
 # check if patient can have more than one type of insurance
 admissions_tab %>%
@@ -374,8 +374,8 @@ admissions_tab %>%
   scale_x_continuous(labels = scales::comma)
 ```
 
-*Summarizing language*  
-I summarized each patients reported language at their *first* admission. There are only two possible language values: English and ? (unknown). English is much more frequent than unknown.
+**Summarizing language**  
+I summarized each patients reported language at their **first** admission. There are only two possible language values: English and ? (unknown). English is much more frequent than unknown.
 ```{r}
 # subset data to only include first admission records for each patient
 admissions_tab_first <- admissions_tab %>%
@@ -388,8 +388,8 @@ admissions_tab_first %>%
 
 ```
 
-*Summarizing marital status*  
-I summarized each patients reported marital status at their *first* admission. Married is the most frequent status and divorced is the least frequent.
+**Summarizing marital status**  
+I summarized each patients reported marital status at their **first** admission. Married is the most frequent status and divorced is the least frequent.
 ```{r}
 admissions_tab_first %>%
   ggplot(aes(x = marital_status)) +
@@ -397,16 +397,16 @@ admissions_tab_first %>%
   xlab("marital status")
 ```
 
-*Summarizing ethnicity*  
-I summarized each patients reported ethnicity at their *first* admission. White is by far the most frequent ethnicity and American Indian/Alaska Native is the least common.
+**Summarizing ethnicity**  
+I summarized each patients reported ethnicity at their **first** admission. White is by far the most frequent ethnicity and American Indian/Alaska Native is the least common.
 ```{r}
 admissions_tab_first %>%
   ggplot(aes(y = ethnicity)) +
   geom_bar()
 ```
 
-*Summarizing death*  
-I summarized death as whether or not each patient had survived up to their *last* discharge time.  
+**Summarizing death**  
+I summarized death as whether or not each patient had survived up to their **last** discharge time.  
 The graph shows that the vast majority of people did not day during any hospitalization.
 
 ```{r}
@@ -439,7 +439,7 @@ patients_tab <- read_csv(str_c(mimic_p, "/core/patients.csv.gz")) %>%
   print(width = Inf)
 ```
 
-*Summarizing gender*  
+**Summarizing gender**  
 There are slightly more females than males in the `patient` data set.
 ```{r}
 patients_tab %>%
@@ -448,7 +448,7 @@ patients_tab %>%
   scale_x_discrete(labels = c("Female", "Male"))
 ```
 
-*Summarizing anchor age*  
+**Summarizing anchor age**  
 A majority of patients were age 0 in their anchor year. There were no patients ages 1-17 in their anchor year. 
 The anchor age of 0 may be used to denote missing data, therefore I filtered out anchor ages of zero and created a new graph. These anchor ages span from 18 to 91. 
 ```{r}
@@ -486,10 +486,8 @@ if(!file.exists("labevents_icustays.csv.gz")){
                                  "charttime", "valuenum"), 
                       nThread = 4))
   labevents_tab %>%
-    semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
-    fwrite("labevents_icustays.csv.gz", nThread = 4)
+    semi_join(icustays_tab, by = c("subject_id", "hadm_id"))
 }
-
 ```
 
 Subset to lab measurements of interest. 
@@ -502,23 +500,43 @@ if(!file.exists("labevents_icustays.csv.gz")){
   #subset to relevant items only
   labevents_tab %>%
     filter(itemid %in% itemid_list) %>%
-    mutate(charttime = ymd_hms(charttime)) %>%
+    mutate(charttime = ymd_hms(charttime))
+}
+```
+
+Per question 8, we only need the first lab measurements during an ICU stay.  
+Therefore, we subset to first lab measurements during each stay.  
+Transform data to wide, so that each measurement has its own column.
+```{r}
+if(!file.exists("labevents_icustays.csv.gz")){
+  #subset to first icu stay for each patient and keep selected columns
+  icustays_tab_sub <- icustays_tab %>%
+    select(c(subject_id:stay_id, intime)) %>%
+    #subset to first ICU stay of each unique patient
+    group_by(subject_id) %>%
+    slice_min(intime)
+  
+  #subset to first measurements during ICU stay and keep selected columns
+  labevents_tab %>%
+    #merge with subset icu data
+    left_join(icustays_tab_sub, by = c("subject_id", "hadm_id")) %>%
+    #keep only first measurement during icu stay
+    filter(charttime >= intime) %>%
+    group_by_at(vars(hadm_id, itemid)) %>%
+    slice(which.min(charttime)) %>%
+    select(-c(charttime, stay_id, intime)) %>%
+    #save as csv
     fwrite("labevents_icustays.csv.gz", nThread = 4)
 }
 
+#Read in subset `labevents` data
 system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
 labevents_tab %>%
   as.tibble() %>%
   print(width = Inf)
 
-```
-
-Per question 8, we only need the first lab measurements during an ICU stay. Therefore, we subset to first lab measurements during each stay.
-```{r}
+#Transform to wide layout
 labevents_tab <- labevents_tab %>%
-  group_by_at(vars(hadm_id, itemid)) %>%
-  slice(which.min(charttime)) %>%
-  select(-charttime) %>%
   spread(key = itemid, value = valuenum) %>%
   rename(creatinine = "50912",
          potassium = "50971",
@@ -532,7 +550,6 @@ labevents_tab <- labevents_tab %>%
          calcium = "50893",
          lactate = "50813") %>%
   print(width = Inf)
-
 ```
 
 ## Q7. Vitals from chartered events
@@ -548,44 +565,103 @@ We are interested in the vitals for ICU patients: heart rate, mean and systolic 
 
 Read in chart events
 ```{r}
-# if(!file.exists("chartevents_icustays.csv.gz")){
-#   system.time(chartevents_tab <- 
-#                 fread(str_c(mimic_p, "/icu/chartevents.csv.gz"),
-#                       select = c("subject_id", "hadm_id", "itemid", 
-#                                  "charttime", "valuenum"), 
-#                       nThread = 4))
-#   chartevents_tab %>%
-#     semi_join(icustays_tab, by = c("subject_id", "hadm_id")) %>%
-#     fwrite("chartevents_icustays.csv.gz", nThread = 4)
-# }
-# 
-# system.time(chartevents_tab <- fread("chartevents_icustays.csv.gz"))
-# chartevents_tab %>%
-#   as.tibble() %>%
+mimic_derived_p <- "/usr/203b-data/mimic-iv-derived-data"
+
+if(!file.exists("chartevents_filtered.csv.gz")){
+  system.time(chart_tab <- fread(str_c(mimic_derived_p,
+                                       "/chartevents_filtered_itemid.csv.gz"),
+                                 col.names = c("subject_id",
+                                               "hadm_id",
+                                               "stay_id",
+                                               "charttime",
+                                               "itemid",
+                                               "valuenum"),
+                                 nThread = 4))
+  chart_tab %>%
+    as_tibble() %>%
+    mutate_at(c("subject_id", "hadm_id", "stay_id"), as.numeric) %>%
+    mutate(charttime = ymd_hms(charttime))
+}
+```
+
+If we were able to load the original `chartevents` file, we would use the following code to subset it to only the relevant `itemid`s. (Relevant labels are per Dr. Zhou's lecture)  
+  
+Read in the chart item dictionary and find relevant `itemid`s
+```{r}
+# ditems_tab <- read_csv(str_c(mimic_p, "/icu/d_items.csv.gz")) %>%
 #   print(width = Inf)
-
+# 
+# for(lab in c("Heart Rate", "Blood Pressure mean", "Blood Pressure systolic",
+#              "Temperature", "SpO2", "Respiratory Rate")){
+#   ditems_tab %>%
+#     filter(grepl(lab, label) | grepl(lab, abbreviation)) %>%
+#     print(width = Inf)
+# }
 ```
 
-Read in the chart item dictionary
+Subset to relevant `itemid`s
 ```{r}
-ditems_tab <- read_csv(str_c(mimic_p, "/icu/d_items.csv.gz")) %>%
+# chart_list <- c("Heart Rate", "Arterial Blood Pressure mean", 
+#                 "Non Invasive Blood Pressure mean",
+#                 "Arterial Blood Pressure systolic", 
+#                 "Non Invasive Blood Pressure systolic",
+#                 "Temperature Fahrenheit", 
+#                 "O2 saturation pulseoxymetry", "Respiratory Rate")
+# 
+# ditems_tab_sub <- ditems_tab %>%
+#   filter(label %in% chart_list)
+# 
+# 
+#   #subset to relevant items only
+#   chart_tab %>%
+#     filter(itemid %in% ditems_tab_sub$itemid) %>%
+#     mutate(charttime = ymd_hms(charttime)) %>%
+#     fwrite("labevents_icustays.csv.gz", nThread = 4)
+```
+
+Instead, we just need to read in the pre-filtered `chartevents` data set.  
+Per question 8, subset to only include first vitals measurements during icu stay for each patient
+```{r}
+if(!file.exists("chartevents_filtered.csv.gz")){
+  
+  #subset to first icu stay for each patient and keep selected columns
+  icustays_tab_sub <- icustays_tab %>%
+    select(c(subject_id:stay_id, intime)) %>%
+    #subset to first ICU stay of each unique patient
+    group_by(subject_id) %>%
+    slice_min(intime)
+  
+  #subset to first measurements during ICU stay and keep selected columns
+  chart_tab %>%
+    as.tibble() %>%
+    #merge with subset icu data
+    left_join(icustays_tab_sub, by = c("subject_id", "hadm_id", "stay_id")) %>%
+    #keep only first measurement during icu stay
+    filter(charttime >= intime) %>%
+    group_by_at(vars(hadm_id, itemid)) %>%
+    slice(which.min(charttime)) %>%
+    select(-c(charttime, intime)) %>%
+    #save as csv
+    fwrite("chartevents_filtered.csv.gz", nThread = 4)
+}
+
+#Read in subset `chartevents` data
+system.time(chart_tab <- fread("chartevents_filtered.csv.gz"))
+chart_tab %>%
+  as.tibble() %>%
   print(width = Inf)
-```
 
-Get relevant `itemid`s for vitals
-```{r}
-chart_list <- c("Heart Rate", "Temperature Fahrenheit", "SpO2 Desat Limit",
-                "Respiratory Rate")
-
-ditems_tab_sub <- ditems_tab %>%
-  filter(label %in% chart_list)
-
-## Non Invasive Blood Pressure systolic, Manual Blood Pressure Systolic (Right/Left), Arterial Blood Pressure systolic, ART BP systolic - WHICH ONE?
-
-## Non Invasive Blood Pressure mean, Mean BP (VAD), Arterial Blood Pressure mean, ART BP mean, IABP Mean, HM II- Mean BP - WHICH ONE?
-
-#RR (set), RR(sponaneous), RR(total) -- WHICH ONE?
-
+#Transform to wide layout
+chart_tab <- chart_tab %>%
+  spread(key = itemid, value = valuenum) %>%
+  rename(heart_rate = "220045",
+         ART_BP_mean = "220052",
+         NI_BP_mean = "220181",
+         ART_BP_systolic = "220050",
+         NI_BP_systolic = "220179",
+         temperature_fah = "223761",
+         respiratory_rate = "220210") %>%
+  print(width = Inf)
 ```
 
 ## Q8. Putting things together
@@ -605,8 +681,8 @@ and columns contain at least following variables
 - an indicator variable whether the patient died within 30 days of hospital admission  
 
 #### Solution:
-- vitals ?
-- `admittime` to death OR icu `intime` to death?
+
+Create tibble as instructed above
 ```{r}
 # get death time for each patient that died
 death_tab <- admissions_tab %>% group_by(subject_id) %>%
@@ -629,16 +705,17 @@ icustays_tab_first <- icustays_tab %>%
   filter(age_at_adm >= 18) %>%
   #merge with first lab measurements data
   left_join(labevents_tab, by = c("subject_id", "hadm_id")) %>%
+  #merge with first vitals measurements data
+  left_join(chart_tab, by = c("subject_id", "hadm_id", "stay_id")) %>%
   #merge with death data
   left_join(death_tab, by = "subject_id") %>%
   mutate(died = ifelse(is.na(died), 0, died),
          #time from admission to death
-         days_admit_death = difftime(date(death_time), date(admittime), 
+         admit_to_death = difftime(date(death_time), date(admittime), 
                                   units = "days"),
          #indicator: died within 30 days of admission
-         died_in_30days = ifelse(days_admit_death > 30 | 
-                                   is.na(days_admit_death), 0, 1)) %>%
+         died_in_30days = ifelse(admit_to_death > 30 | 
+                                   is.na(admit_to_death), 0, 1)) %>%
   print(width = Inf)
-  
 ```
 
