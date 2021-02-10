@@ -115,8 +115,6 @@ icustays_tab %>%
             median = round(median(los), 2),
             Q3 = round(quantile(los, .75), 2),
             max = round(max(los), 2))
-
-
 ```
 
 **Distribution of first ICU unit:** bar graph and frequency table  
@@ -182,15 +180,14 @@ Note it is possible that one patient (uniquely identified by the `SUBJECT_ID`) i
 
 #### Solution:
 
-Read in admissions
+Read in `admissions`
 ```{r}
 admissions_tab <- read_csv(str_c(mimic_p, "/core/admissions.csv.gz")) %>%
   print(width = Inf)
-
 ```
 
 **Summarizing admission year**  
-From about the years 2130 to 2190, the number of admissions are fairly constant. There were less admission both before and after these years.
+From about the years 2130 to 2190, the number of admissions are fairly constant. There were less admissions both before and after these years.
 ```{r}
 admissions_tab %>% 
   count(admityear = year(admittime)) %>% 
@@ -202,7 +199,7 @@ admissions_tab %>%
 ```
 
 **Summarizing admission month**  
-Admissions are fairly evenly distributed across all months. February has the least number of admissions, which may be due to it being the shortest month.
+Admissions are fairly evenly distributed across all months. February has the least admissions, which may be due to it being the shortest month.
 ```{r}
 admissions_tab %>% 
   mutate(admitmonth = month(admittime, label = TRUE, abbr = FALSE)) %>% 
@@ -214,7 +211,7 @@ admissions_tab %>%
 ```
 
 **Summarizing admission month day**  
-Admissions are fairly evenly distributed across the first 28 days of the any month. The 29th, 30th, and 31st of any month have less admissions. This is possibly explained by the fact that not every month has those days.
+Admissions are fairly evenly distributed across the first 28 days of the any month. The 29th, 30th, and 31st days of any month have less admissions. This is possibly explained by the fact that not every month has those days.
 ```{r}
 admissions_tab %>% 
   count(admitmonth_day = mday(admittime)) %>% 
@@ -237,7 +234,8 @@ admissions_tab %>%
 ```
 
 **Summarizing admission hour**  
-Admissions are most frequent around midnight with a steady decline until about 6:00am. The admission then increase from 6:00-7:00am before decreasing again until about 9:00am. From 9:00am to about 6:00pm admissions are steadily increasing. They then began to decrease again from 6:00pm to 11:00pm.
+Admissions are most frequent around midnight. Perhaps there really are more admission at midnight, but it's also possible that time 0:00 is used when exact admission time is unknown.  
+There is a steady decline from midnight until about 6:00am. The admissions then increase from 6:00-7:00am before decreasing again until about 9:00am. From 9:00am to about 6:00pm admissions are steadily increasing. They then began to decrease again from 6:00pm to 11:00pm.
 ```{r}
 admissions_tab %>% 
   count(admithour = hour(admittime)) %>% 
@@ -249,7 +247,7 @@ admissions_tab %>%
 ```
 
 **Summarizing number of deaths in each year**  
-The `admissions` data dictionary states that discharge time and death time should be the same, but may differ due to typographical errors. We first look at these to variables to see which we should use to determine death time.  
+The `admissions` data dictionary states that discharge time and death time should be the same, but may differ due to typographical errors. We first look at these two variables to see which we should use to determine death time.  
   
 Among patients who died at the hospital, 7 are flagged as having died in two separate hospitalizations (i.e. `hospital_expire_flag` = 1) 
 ```{r}
@@ -275,7 +273,7 @@ admissions_tab %>%
 ```
 
 Discharge time and death time discrepancies:  
-In addition to the 13 missing death times, there are 634 discrepant discharge and death times.  In all 634 cases, **only the time is discrepant**. The dates are exactly the same. *Since the dates are the same in both variables and `dischtime` does not have any missing values, we will use `dischtime` to analyze death dates*.
+In addition to the 13 missing death times, there are 634 discrepant discharge and death times.  In all 634 cases, **only the time is discrepant**. The dates are exactly the same.
 ```{r}
 #number of discrepant cases
 admissions_tab %>%
@@ -289,6 +287,8 @@ admissions_tab %>%
 
 ```
 
+**Since the dates are the same in both variables and `dischtime` does not have any missing values, we will use `dischtime` to analyze death dates**.  
+  
 The number of deaths each year mostly increases between 2105 to about 2130. The number of deaths then fluctuates between about 100 and 140 until around 2189 before decreasing again. 
 ```{r, message=FALSE}
 admissions_tab %>%
@@ -338,7 +338,7 @@ admissions_tab %>%
 ```
 
 **Summarizing admission location**  
-The vast majority of admissions were via the emergency room. Admissions via physician referral is the next most common. 
+The vast majority of admissions were via the emergency room. Admissions via physician referral are the next most common. 
 ```{r}
 admissions_tab %>%
   ggplot(aes(y = admission_location)) +
@@ -407,7 +407,7 @@ admissions_tab_first %>%
 
 **Summarizing death**  
 I summarized death as whether or not each patient had survived up to their **last** discharge time.  
-The graph shows that the vast majority of people did not day during any hospitalization.
+The graph shows that the vast majority of patients did not day during any hospitalization.
 
 ```{r}
 #histogram of death indicator  
@@ -433,7 +433,7 @@ Explore `patients.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/core/patients
 
 #### Soultion: 
 
-Read in patients
+Read in `patients`
 ```{r}
 patients_tab <- read_csv(str_c(mimic_p, "/core/patients.csv.gz")) %>%
   print(width = Inf)
@@ -450,7 +450,8 @@ patients_tab %>%
 
 **Summarizing anchor age**  
 A majority of patients were age 0 in their anchor year. There were no patients ages 1-17 in their anchor year. 
-The anchor age of 0 may be used to denote missing data, therefore I filtered out anchor ages of zero and created a new graph. These anchor ages span from 18 to 91. 
+The anchor age of 0 may be used to denote missing data, or may imply that the patient's `anchor_year` is their birth year.  
+For a better look at anchor ages greater than 0, I filtered out anchor ages of 0 and created a new graph. These anchor ages span from 18 to 91. 
 ```{r}
 patients_tab %>%
   ggplot(aes(x = anchor_age)) +
@@ -477,7 +478,7 @@ We are interested in the lab measurements of creatinine (50912), potassium (5097
 
 #### Soultion: 
 
-Read in lab events
+Read in `labevents`
 ```{r}
 if(!file.exists("labevents_icustays.csv.gz")){
   system.time(labevents_tab <- 
@@ -504,9 +505,8 @@ if(!file.exists("labevents_icustays.csv.gz")){
 }
 ```
 
-Per question 8, we only need the first lab measurements during an ICU stay.  
-Therefore, we subset to first lab measurements during each stay.  
-Transform data to wide, so that each measurement has its own column.
+Per question 8, I subset to only include the first lab measurements during the first icu stay for each patient.  
+Transform data to wide layout, so that each lab item has its own column.
 ```{r}
 if(!file.exists("labevents_icustays.csv.gz")){
   #subset to first icu stay for each patient and keep selected columns
@@ -531,12 +531,10 @@ if(!file.exists("labevents_icustays.csv.gz")){
 
 #Read in subset `labevents` data
 system.time(labevents_tab <- fread("labevents_icustays.csv.gz"))
-labevents_tab %>%
-  as.tibble() %>%
-  print(width = Inf)
 
 #Transform to wide layout
 labevents_tab <- labevents_tab %>%
+  as_tibble() %>%
   spread(key = itemid, value = valuenum) %>%
   rename(creatinine = "50912",
          potassium = "50971",
@@ -563,7 +561,7 @@ We are interested in the vitals for ICU patients: heart rate, mean and systolic 
 
 #### Soultion: 
 
-Read in chart events
+Read in `chartevents`
 ```{r}
 mimic_derived_p <- "/usr/203b-data/mimic-iv-derived-data"
 
@@ -584,7 +582,7 @@ if(!file.exists("chartevents_filtered.csv.gz")){
 }
 ```
 
-If we were able to load the original `chartevents` file, we would use the following code to subset it to only the relevant `itemid`s. (Relevant labels are per Dr. Zhou's lecture)  
+If I was able to load the original `chartevents` file, I would use the following code to subset to only the relevant `itemid`s. (Relevant labels are per Dr. Zhou)  
   
 Read in the chart item dictionary and find relevant `itemid`s
 ```{r}
@@ -619,8 +617,11 @@ Subset to relevant `itemid`s
 #     fwrite("labevents_icustays.csv.gz", nThread = 4)
 ```
 
-Instead, we just need to read in the pre-filtered `chartevents` data set.  
-Per question 8, subset to only include first vitals measurements during icu stay for each patient
+Instead, I just need to read in the pre-filtered `chartevents` data set.  
+**There is not an `itemid` for SpO2 in this filtered data set. Therefore, SpO2 measurements will not be included in further steps.**  
+  
+Per question 8, I subset to only include the first vitals measurements during the first icu stay for each patient.  
+Transform data to wide layout, so that each chart item has its own column.
 ```{r}
 if(!file.exists("chartevents_filtered.csv.gz")){
   
@@ -633,7 +634,7 @@ if(!file.exists("chartevents_filtered.csv.gz")){
   
   #subset to first measurements during ICU stay and keep selected columns
   chart_tab %>%
-    as.tibble() %>%
+    as_tibble() %>%
     #merge with subset icu data
     left_join(icustays_tab_sub, by = c("subject_id", "hadm_id", "stay_id")) %>%
     #keep only first measurement during icu stay
@@ -647,12 +648,10 @@ if(!file.exists("chartevents_filtered.csv.gz")){
 
 #Read in subset `chartevents` data
 system.time(chart_tab <- fread("chartevents_filtered.csv.gz"))
-chart_tab %>%
-  as.tibble() %>%
-  print(width = Inf)
 
 #Transform to wide layout
 chart_tab <- chart_tab %>%
+  as_tibble() %>%
   spread(key = itemid, value = valuenum) %>%
   rename(heart_rate = "220045",
          ART_BP_mean = "220052",
@@ -682,7 +681,8 @@ and columns contain at least following variables
 
 #### Solution:
 
-Create tibble as instructed above
+Create tibble as instructed above.  
+**As noted in Q7, there will not be a column for SpO2 as there was not a corresponding `itemid` in the filtered `chartevents` data set**
 ```{r}
 # get death time for each patient that died
 death_tab <- admissions_tab %>% group_by(subject_id) %>%
