@@ -105,13 +105,15 @@ admissions_tble <- tbl(con, Id(schema = "mimic_core", table = "admissions")) %>%
 
 6. Connect to the `mimic_labevents_icu` table.
 ```{r}
-labevents_tble <- tbl(con, Id(schema = "public", table = "mimic_labevents_icu")) %>%
+labevents_tble <- tbl(con, Id(schema = "public", 
+                              table = "mimic_labevents_icu")) %>%
   print(width = Inf)
 ```
 
 7. Connect to `mimic_chartevents_icu` table.
 ```{r}
-chartevents_tble <- tbl(con, Id(schema = "public", table = "mimic_chartevents_icu")) %>%
+chartevents_tble <- tbl(con, Id(schema = "public", 
+                                table = "mimic_chartevents_icu")) %>%
   print(width = Inf)
 ```
 
@@ -125,8 +127,43 @@ if (!dir.exists("mimiciv_shiny")) {
 ```
 
 ```{r}
-# TODO
-# icustays_tble %>%
+## Getting warning/error??
+
+icustays_tble %>% 
+  #(i) keep only the first ICU stay of each unique patient
+  group_by(subject_id) %>%
+  slice_min(intime) %>%
+  #(ii) merge in admissions and patients data
+  left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(patients_tble, by = "subject_id") %>%
+  #(iii) keep adults only (age at admission >= 18)
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
+  filter(age_at_adm >= 18) %>%
+  #(iv) merge in labevents and chartevents tables
+  left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
+  #(v) display the SQL query
+  show_query() %>%
+  #(vi) collect SQL query result into memory as a tibble
+  collect() %>%
+  #(vii) create an indicator for 30-day mortality
+         #get time of death data
+  left_join(admissions_tble %>% 
+              group_by(subject_id) %>%
+              filter(hospital_expire_flag == 1) %>%
+              mutate(died = 1,
+                     deathtime_upd = last(dischtime)) %>%
+              slice_max(dischtime) %>%
+              select(subject_id, died, deathtime_upd),
+            by  = "subject_id") %>%
+  mutate(died = ifelse(is.na(died), 0, died),
+         #time from admission to death
+         admit_to_death = difftime(date(deathtime_upd), date(admittime),
+                                   units = "days"),
+         #indicator: died within 30 days of admission
+         died_30days = ifelse(admit_to_death > 30 | 
+                                   is.na(admit_to_death), 0, 1)) %>%
+  saveRDS("mimiciv_shiny/icu_cohort.rds")
 
 ```
 
