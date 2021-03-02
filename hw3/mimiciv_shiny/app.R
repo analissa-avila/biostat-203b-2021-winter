@@ -32,7 +32,7 @@ ui <- fluidPage(
                  tabsetPanel(type = "tabs",
                              tabPanel("Plot", 
                                       plotOutput("plotDemo")),
-                             tabPanel("Table", 
+                             tabPanel("Summary Statistics", 
                                       tableOutput("tableDemo"),
                                       textOutput("missingDemo"))
                              )
@@ -58,7 +58,7 @@ ui <- fluidPage(
                              tabPanel("Histogram", 
                                       plotOutput("histLab"),
                                       uiOutput("sliderLab")),
-                             tabPanel("Table", 
+                             tabPanel("Summary Statistics", 
                                       tableOutput("tableLab"),
                                       textOutput("missingLab"))
                              )
@@ -92,7 +92,7 @@ ui <- fluidPage(
                              tabPanel("Histogram", 
                                       plotOutput("histVital"),
                                       uiOutput("sliderVital")),
-                             tabPanel("Table", 
+                             tabPanel("Summary Statistics", 
                                       tableOutput("tableVital"),
                                       textOutput("missingVital"))
                              )
@@ -115,7 +115,7 @@ server <- function(input, output) {
     }
     else if (input$varDemo == "died" | input$varDemo == "died_in_30days"){
       dat <- data.frame(varDemo = factor(icu_cohort[[input$varDemo]], 
-                                         labels = c("no", "yes")))
+                                         labels = c("No", "Yes")))
     }
     else {
       dat <- data.frame(varDemo = factor(icu_cohort[[input$varDemo]]))
