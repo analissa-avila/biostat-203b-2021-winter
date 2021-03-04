@@ -128,9 +128,9 @@ if (!dir.exists("mimiciv_shiny")) {
 ```
 
 ```{r}
-## Getting warning/error??
 
-icustays_tble %>% 
+if(!file.exists("mimiciv_shiny/icu_cohort.rds")){
+  icustays_tble %>% 
   #(i) keep only the first ICU stay of each unique patient
   group_by(subject_id) %>%
   slice_min(intime) %>%
@@ -164,7 +164,8 @@ icustays_tble %>%
          #indicator: died within 30 days of admission
          died_in_30days = ifelse(admit_to_death > 30 | 
                                    is.na(admit_to_death), 0, 1)) %>%
-  saveRDS("mimiciv_shiny/icu_cohort1.rds")
+  saveRDS("mimiciv_shiny/icu_cohort.rds")
+}
 
 ```
 
