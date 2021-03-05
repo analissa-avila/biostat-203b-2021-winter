@@ -828,43 +828,81 @@ password &lt;- ifelse(Sys.info()[[&quot;nodename&quot;]] == &quot;ucla-biostat-2
 if (!dir.exists(&quot;mimiciv_shiny&quot;)) {
   dir.create(&quot;mimiciv_shiny&quot;)
 }</code></pre>
-<pre class="r"><code>if(!file.exists(&quot;mimiciv_shiny/icu_cohort.rds&quot;)){
-  icustays_tble %&gt;% 
-  #(i) keep only the first ICU stay of each unique patient
+<p><strong>Note:</strong> I reordered the steps so that filtering to adults (step iii) is done after the query results are collected into memory as a tibble (step vi). When I tried to filter by age before collecting the results into memory, I would get an error that the ‘server closed the connection unexpectedly’.</p>
+<pre class="r"><code>icustays_tble %&gt;% 
+  #keep only the first ICU stay of each unique patient
   group_by(subject_id) %&gt;%
   slice_min(intime) %&gt;%
-  #(ii) merge in admissions and patients data
-  left_join(admissions_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
+  ungroup(subject_id) %&gt;%
+
+  #merge in admissions and patients data
+  left_join(admissions_tble %&gt;%
+              select(!(deathtime)),
+            by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
   #get time of death data
   left_join(admissions_tble %&gt;%
+              filter(!is.na(deathtime)) %&gt;%
               group_by(subject_id) %&gt;%
-              filter(hospital_expire_flag == 1) %&gt;%
-              mutate(died = 1,
-                     deathtime_upd = last(dischtime)) %&gt;%
-              slice_max(dischtime) %&gt;%
-              select(subject_id, died, deathtime_upd),
+              slice_max(deathtime) %&gt;%
+              ungroup(subject_id) %&gt;%
+              select(subject_id, deathtime),
             by  = &quot;subject_id&quot;) %&gt;%
   left_join(patients_tble, by = &quot;subject_id&quot;) %&gt;%
-  #(iii) keep adults only (age at admission &gt;= 18)
-  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
-  filter(age_at_adm &gt;= 18) %&gt;%
-  #(iv) merge in labevents and chartevents tables
+  
+  #merge in labevents and chartevents tables
   left_join(labevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
   left_join(chartevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;)) %&gt;%
-  #(v) display the SQL query
+  
+  #display the SQL query
   show_query() %&gt;%
-  #(vi) collect SQL query result into memory as a tibble
+  
+  #collect SQL query result into memory as a tibble
   collect() %&gt;%
-  #(vii) create an indicator for 30-day mortality
-  mutate(died = ifelse(is.na(died), 0, died),
+  
+  #keep adults only (age at admission &gt;= 18)
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
+  filter(age_at_adm &gt;= 18) %&gt;%
+  
+  #create an indicator for 30-day mortality
+  mutate(died = ifelse(is.na(deathtime), 0, 1),
          #time from admission to death
-         admit_to_death = difftime(date(deathtime_upd), date(admittime),
+         admit_to_death = difftime(date(deathtime), date(admittime),
                                    units = &quot;days&quot;),
          #indicator: died within 30 days of admission
-         died_in_30days = ifelse(admit_to_death &gt; 30 | 
+         died_in_30days = ifelse(admit_to_death &gt; 30 |
                                    is.na(admit_to_death), 0, 1)) %&gt;%
-  saveRDS(&quot;mimiciv_shiny/icu_cohort.rds&quot;)
-}</code></pre>
+  #save final tibble to R data file
+  saveRDS(&quot;mimiciv_shiny/icu_cohort.rds&quot;)</code></pre>
+<pre><code>## &lt;SQL&gt;
+## SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;LHS&quot;.&quot;stay_id&quot; AS &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;deathtime&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;bicarbonate&quot;, &quot;calcium&quot;, &quot;chloride&quot;, &quot;creatinine&quot;, &quot;glucose&quot;, &quot;magnesium&quot;, &quot;potassium&quot;, &quot;sodium&quot;, &quot;hematocrit&quot;, &quot;wbc&quot;, &quot;lactate&quot;, &quot;heart_rate&quot;, &quot;non_invasive_blood_pressure_systolic&quot;, &quot;non_invasive_blood_pressure_mean&quot;, &quot;respiratory_rate&quot;, &quot;temperature_fahrenheit&quot;, &quot;arterial_blood_pressure_systolic&quot;, &quot;arterial_blood_pressure_mean&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;deathtime&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;bicarbonate&quot;, &quot;calcium&quot;, &quot;chloride&quot;, &quot;creatinine&quot;, &quot;glucose&quot;, &quot;magnesium&quot;, &quot;potassium&quot;, &quot;sodium&quot;, &quot;hematocrit&quot;, &quot;wbc&quot;, &quot;lactate&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;deathtime&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;deathtime&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, RANK() OVER (PARTITION BY &quot;subject_id&quot; ORDER BY &quot;intime&quot;) AS &quot;q01&quot;
+## FROM &quot;mimic_icu&quot;.&quot;icustays&quot;) &quot;q01&quot;
+## WHERE (&quot;q01&quot; &lt;= 1)) &quot;LHS&quot;
+## LEFT JOIN (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;
+## FROM &quot;mimic_core&quot;.&quot;admissions&quot;) &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN (SELECT &quot;subject_id&quot;, &quot;deathtime&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, RANK() OVER (PARTITION BY &quot;subject_id&quot; ORDER BY &quot;deathtime&quot; DESC) AS &quot;q01&quot;
+## FROM &quot;mimic_core&quot;.&quot;admissions&quot;
+## WHERE (NOT(((&quot;deathtime&quot;) IS NULL)))) &quot;q01&quot;
+## WHERE (&quot;q01&quot; &lt;= 1)) &quot;q02&quot;) &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;mimic_core&quot;.&quot;patients&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;public&quot;.&quot;mimic_labevents_icu&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;public&quot;.&quot;mimic_chartevents_icu&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot; AND &quot;LHS&quot;.&quot;stay_id&quot; = &quot;RHS&quot;.&quot;stay_id&quot;)</code></pre>
 <p>Close database connection and clear workspace.</p>
 <pre class="r"><code>dbDisconnect(con)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
@@ -875,7 +913,7 @@ if (!dir.exists(&quot;mimiciv_shiny&quot;)) {
 <p>Develop a Shiny app for exploring the ICU cohort data created in Q1. The app should reside in the <code>mimiciv_shiny</code> folder. The app should provide easy access to the graphical and numerical summaries of variables (demographics, lab measurements, vitals) in the ICU cohort.</p>
 <div id="solution" class="section level3">
 <h3>Solution:</h3>
-<p>Run the app</p>
+<p>Run the app to explore univariate distributions of demographic variables, lab measurements, and vitals in the ICU cohort. Both graphical and numerical summaries are provided.</p>
 <pre class="r"><code>runApp(&quot;mimiciv_shiny&quot;)</code></pre>
 </div>
 </div>

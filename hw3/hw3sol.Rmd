@@ -127,45 +127,53 @@ if (!dir.exists("mimiciv_shiny")) {
 }
 ```
 
+**Note:** I reordered the steps so that filtering to adults (step iii) is done after the query results are collected into memory as a tibble (step vi). When I tried to filter by age before collecting the results into memory, I would get an error that the 'server closed the connection unexpectedly'. 
 ```{r}
 
-if(!file.exists("mimiciv_shiny/icu_cohort.rds")){
-  icustays_tble %>% 
-  #(i) keep only the first ICU stay of each unique patient
+icustays_tble %>% 
+  #keep only the first ICU stay of each unique patient
   group_by(subject_id) %>%
   slice_min(intime) %>%
-  #(ii) merge in admissions and patients data
-  left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
+  ungroup(subject_id) %>%
+
+  #merge in admissions and patients data
+  left_join(admissions_tble %>%
+              select(!(deathtime)),
+            by = c("subject_id", "hadm_id")) %>%
   #get time of death data
   left_join(admissions_tble %>%
+              filter(!is.na(deathtime)) %>%
               group_by(subject_id) %>%
-              filter(hospital_expire_flag == 1) %>%
-              mutate(died = 1,
-                     deathtime_upd = last(dischtime)) %>%
-              slice_max(dischtime) %>%
-              select(subject_id, died, deathtime_upd),
+              slice_max(deathtime) %>%
+              ungroup(subject_id) %>%
+              select(subject_id, deathtime),
             by  = "subject_id") %>%
   left_join(patients_tble, by = "subject_id") %>%
-  #(iii) keep adults only (age at admission >= 18)
-  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
-  filter(age_at_adm >= 18) %>%
-  #(iv) merge in labevents and chartevents tables
+  
+  #merge in labevents and chartevents tables
   left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
   left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
-  #(v) display the SQL query
+  
+  #display the SQL query
   show_query() %>%
-  #(vi) collect SQL query result into memory as a tibble
+  
+  #collect SQL query result into memory as a tibble
   collect() %>%
-  #(vii) create an indicator for 30-day mortality
-  mutate(died = ifelse(is.na(died), 0, died),
+  
+  #keep adults only (age at admission >= 18)
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
+  filter(age_at_adm >= 18) %>%
+  
+  #create an indicator for 30-day mortality
+  mutate(died = ifelse(is.na(deathtime), 0, 1),
          #time from admission to death
-         admit_to_death = difftime(date(deathtime_upd), date(admittime),
+         admit_to_death = difftime(date(deathtime), date(admittime),
                                    units = "days"),
          #indicator: died within 30 days of admission
-         died_in_30days = ifelse(admit_to_death > 30 | 
+         died_in_30days = ifelse(admit_to_death > 30 |
                                    is.na(admit_to_death), 0, 1)) %>%
+  #save final tibble to R data file
   saveRDS("mimiciv_shiny/icu_cohort.rds")
-}
 
 ```
 
@@ -180,7 +188,7 @@ rm(list = ls())
 Develop a Shiny app for exploring the ICU cohort data created in Q1. The app should reside in the `mimiciv_shiny` folder. The app should provide easy access to the graphical and numerical summaries of variables (demographics, lab measurements, vitals) in the ICU cohort.
 
 ### Solution:
-Run the app
+Run the app to explore univariate distributions of demographic variables, lab measurements, and vitals in the ICU cohort. Both graphical and numerical summaries are provided.
 ```{r, warning=FALSE, eval=FALSE}
 runApp("mimiciv_shiny")
 ```
