@@ -8,7 +8,8 @@ icu_cohort = readRDS("icu_cohort.rds")
 
 # User interface ----
 ui <- fluidPage(
-  titlePanel("MIMIC-IV ICU Stays Data Explorer"),
+  titlePanel("MIMIC-IV First ICU Stays Data Explorer"),
+             h4("(n = 50,048 patients)"),
   
   tabsetPanel(
     tabPanel("Demographics",
@@ -170,7 +171,8 @@ server <- function(input, output) {
     # if age at admission, include mean, median, etc.
     if(input$varDemo == "age_at_adm"){
       dataDemo() %>%
-        summarise(min = round(min(varDemo), 2),
+        summarise(n = sum(!(is.na(.))),
+                  min = round(min(varDemo), 2),
                   Q1 = round(quantile(varDemo, .25), 2),
                   mean = round(mean(varDemo), 2),
                   median = round(median(varDemo), 2),
@@ -224,7 +226,8 @@ server <- function(input, output) {
   # Generate a table of summary statistics for each LAB EVENT ----
   output$tableLab <- renderTable({
     dataLab() %>%
-      summarise(min = round(min(varLab, na.rm = TRUE), 2),
+      summarise(n = sum(!(is.na(.))),
+                min = round(min(varLab, na.rm = TRUE), 2),
                 Q1 = round(quantile(varLab, .25, na.rm = TRUE), 2),
                 mean = round(mean(varLab, na.rm = TRUE), 2),
                 median = round(median(varLab, na.rm = TRUE), 2),
@@ -287,7 +290,8 @@ server <- function(input, output) {
   # Generate a table of summary statistics for each CHART EVENT ----
   output$tableVital <- renderTable({
     dataVital() %>%
-      summarise(min = round(min(varVital, na.rm = TRUE), 2),
+      summarise(n = sum(!(is.na(.))),
+                min = round(min(varVital, na.rm = TRUE), 2),
                 Q1 = round(quantile(varVital, .25, na.rm = TRUE), 2),
                 mean = round(mean(varVital, na.rm = TRUE), 2),
                 median = round(median(varVital, na.rm = TRUE), 2),
