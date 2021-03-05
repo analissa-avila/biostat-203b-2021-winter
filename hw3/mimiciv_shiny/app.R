@@ -117,6 +117,10 @@ server <- function(input, output) {
       dat <- data.frame(varDemo = factor(icu_cohort[[input$varDemo]], 
                                          labels = c("No", "Yes")))
     }
+    else if (input$varDemo == "gender"){
+      dat <- data.frame(varDemo = factor(icu_cohort[[input$varDemo]], 
+                                         labels = c("Female", "Male")))
+    }
     else {
       dat <- data.frame(varDemo = factor(icu_cohort[[input$varDemo]]))
     }
