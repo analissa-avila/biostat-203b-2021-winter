@@ -30,11 +30,21 @@ Through the Shiny app developed in HW3, we observe abundant missing values in th
 
 0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
 
-    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren. 
+    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren.  
+    
+    **Soultion:**  
+    Done.
 
-1. Explain the jargon MCAR, MAR, and MNAR.
+1. Explain the jargon MCAR, MAR, and MNAR.  
+**Solution:**  
+MCAR, MAR, and MNAR refer to the three missing data mechanisms. A missing data mechanism is the process that determines the probabilities of data being missing.  
+MCAR stands for missing completely at random. This occurs when the probability of being missing is the same for all cases. Essentially the cause of the missingness is unrelated to the data. Although MCAR is the most ideal missing data mechanism, it is often unrealistic.  
+MAR stands for missing at random. This occurs when the probability of being missing is the same only within groups defined by the observed data. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the fully observed variable only. MAR is more realistic than MCAR.  
+MNAR stands for missing not at random. This occurs when the probability of being missing is varied for reasons that are unknown. That is to say, if there is a fully observed varialbe and a variable with missing data, the probability of response depends on the variable with missing data and possibly on the fully observed variable as well.
 
-2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.
+2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.  
+**Solution:**  
+Multiple Imputation by Chained Equations is a procedure that uses predictive models to iteratively fill in the missing data in a a dataset. During each iteration, each specified variable in the dataset is imputed using the other variables. In the end, a complete data set is returned, however, you can choose to create multiple complete datasets that are then pooled to create a final data set. 
 
 3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.
 
