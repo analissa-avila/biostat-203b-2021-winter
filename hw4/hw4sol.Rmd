@@ -395,6 +395,54 @@ Develop at least two analytic approaches for predicting the 30-day mortality of 
 
 1. Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
 
+#### Solution - partition data into training set and test set
+```{r}
+#install.packages("splitstackshape")
+library(splitstackshape)
+
+set.seed(40)  #set seed for reproducibility
+
+icu_cohort_imp <- icu_cohort_imp %>%
+  mutate(ethnicity = ifelse(ethnicity == "UNABLE TO OBTAIN", 
+                            "UNKNOWN", ethnicity))
+
+#partition data into training and test sets, stratifying on 30-day mortality
+sets <- stratified(icu_cohort_imp, "died_in_30days", 0.8, bothSets = TRUE)
+train <- sets$SAMP1
+test <- sets$SAMP2
+```
+
 2. Train the models using the training set.
 
+#### Solution - train the models
+
+##### Logisitc regression
+```{r}
+train$ethnicity <- relevel(as.factor(train$ethnicity), "WHITE")
+logit.fit <- glm(died_in_30days ~ ethnicity + factor(gender) + married + 
+                   single + widowed + age_at_adm + bicarbonate + calcium + 
+                   chloride + creatinine + glucose + magnesium + potassium + 
+                   sodium + hematocrit + wbc + heart_rate + 
+                   non_invasive_blood_pressure_systolic + 
+                   non_invasive_blood_pressure_mean + 
+                   respiratory_rate + temperature_fahrenheit, 
+                 data = train, 
+                 family = binomial)
+
+
+round(exp(cbind(OR = coef(logit.fit), confint(logit.fit))), 4)
+
+```
+
+##### Logistic regression with lasso penalty
+```{r}
+
+```
+
 3. Compare model prediction performance on the test set.
+
+#### Solution - compare model prediction performance
+```{r}
+
+```
+

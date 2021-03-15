@@ -389,7 +389,11 @@ summary {
 <li><a href="#solution---diagnostic-plots">Solution - diagnostic plots</a></li>
 <li><a href="#solution---complete-dataset">Solution - complete dataset</a></li>
 </ul></li>
-<li><a href="#q2.-predicting-30-day-mortality">Q2. Predicting 30-day mortality</a></li>
+<li><a href="#q2.-predicting-30-day-mortality">Q2. Predicting 30-day mortality</a><ul>
+<li><a href="#solution---partition-data-into-training-set-and-test-set">Solution - partition data into training set and test set</a></li>
+<li><a href="#solution---train-the-models">Solution - train the models</a></li>
+<li><a href="#solution---compare-model-prediction-performance">Solution - compare model prediction performance</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -859,10 +863,84 @@ icu_cohort_imp %&gt;%
 <h2>Q2. Predicting 30-day mortality</h2>
 <p>Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (<code>glm()</code> function), (2) logistic regression with lasso penalty (glmnet package), (3) random forest (randomForest package), or (4) neural network.</p>
 <ol style="list-style-type: decimal">
-<li><p>Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.</p></li>
-<li><p>Train the models using the training set.</p></li>
-<li><p>Compare model prediction performance on the test set.</p></li>
+<li>Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.</li>
 </ol>
+<div id="solution---partition-data-into-training-set-and-test-set" class="section level4">
+<h4>Solution - partition data into training set and test set</h4>
+<pre class="r"><code>#install.packages(&quot;splitstackshape&quot;)
+library(splitstackshape)
+
+set.seed(40)  #set seed for reproducibility
+
+icu_cohort_imp &lt;- icu_cohort_imp %&gt;%
+  mutate(ethnicity = ifelse(ethnicity == &quot;UNABLE TO OBTAIN&quot;, 
+                            &quot;UNKNOWN&quot;, ethnicity))
+
+#partition data into training and test sets, stratifying on 30-day mortality
+sets &lt;- stratified(icu_cohort_imp, &quot;died_in_30days&quot;, 0.8, bothSets = TRUE)
+train &lt;- sets$SAMP1
+test &lt;- sets$SAMP2</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Train the models using the training set.</li>
+</ol>
+</div>
+<div id="solution---train-the-models" class="section level4">
+<h4>Solution - train the models</h4>
+<div id="logisitc-regression" class="section level5">
+<h5>Logisitc regression</h5>
+<pre class="r"><code>train$ethnicity &lt;- relevel(as.factor(train$ethnicity), &quot;WHITE&quot;)
+logit.fit &lt;- glm(died_in_30days ~ ethnicity + factor(gender) + married + 
+                   single + widowed + age_at_adm + bicarbonate + calcium + 
+                   chloride + creatinine + glucose + magnesium + potassium + 
+                   sodium + hematocrit + wbc + heart_rate + 
+                   non_invasive_blood_pressure_systolic + 
+                   non_invasive_blood_pressure_mean + 
+                   respiratory_rate + temperature_fahrenheit, 
+                 data = train, 
+                 family = binomial)
+
+
+round(exp(cbind(OR = coef(logit.fit), confint(logit.fit))), 4)</code></pre>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre><code>##                                               OR   2.5 %      97.5 %
+## (Intercept)                            2965.0659 81.8649 107494.3736
+## ethnicityAMERICAN INDIAN/ALASKA NATIVE    0.8734  0.3214      1.9676
+## ethnicityASIAN                            1.2233  0.9956      1.4921
+## ethnicityBLACK/AFRICAN AMERICAN           0.8398  0.7296      0.9636
+## ethnicityHISPANIC/LATINO                  0.8864  0.6958      1.1153
+## ethnicityOTHER                            1.0109  0.8419      1.2060
+## ethnicityUNKNOWN                          2.4560  2.2386      2.6932
+## factor(gender)M                           0.9339  0.8658      1.0076
+## married                                   0.9563  0.8272      1.1094
+## single                                    1.0236  0.8777      1.1972
+## widowed                                   0.9677  0.8212      1.1431
+## age_at_adm                                1.0329  1.0302      1.0356
+## bicarbonate                               0.8923  0.8832      0.9014
+## calcium                                   0.7795  0.7376      0.8236
+## chloride                                  0.9100  0.9010      0.9191
+## creatinine                                1.1640  1.1263      1.2026
+## glucose                                   1.0038  1.0032      1.0044
+## magnesium                                 1.1641  1.0570      1.2816
+## potassium                                 1.0935  1.0313      1.1592
+## sodium                                    1.0950  1.0818      1.1084
+## hematocrit                                0.9970  0.9906      1.0035
+## wbc                                       1.0421  1.0360      1.0482
+## heart_rate                                1.0100  1.0079      1.0121
+## non_invasive_blood_pressure_systolic      0.9919  0.9896      0.9942
+## non_invasive_blood_pressure_mean          1.0033  1.0001      1.0065
+## respiratory_rate                          1.0445  1.0376      1.0514
+## temperature_fahrenheit                    0.8716  0.8420      0.9023</code></pre>
+</div>
+<div id="logistic-regression-with-lasso-penalty" class="section level5">
+<h5>Logistic regression with lasso penalty</h5>
+<ol start="3" style="list-style-type: decimal">
+<li>Compare model prediction performance on the test set.</li>
+</ol>
+</div>
+</div>
+<div id="solution---compare-model-prediction-performance" class="section level4">
+<h4>Solution - compare model prediction performance</h4>
+</div>
 </div>
 
 
