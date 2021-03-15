@@ -27,7 +27,7 @@ library(miceRanger)
 
 ## Q1. Missing data
 
-Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a data set without missing values.
+Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a dataset without missing values.
 
 0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
 
@@ -42,12 +42,12 @@ Done.
 MCAR, MAR, and MNAR refer to the three missing data mechanisms. A missing data mechanism is the process that determines the probabilities of data being missing.  
 MCAR stands for missing completely at random. This occurs when the probability of being missing is the same for all cases. Essentially the cause of the missingness is unrelated to the data. Although MCAR is the most ideal missing data mechanism, it is often unrealistic.  
 MAR stands for missing at random. This occurs when the probability of being missing is the same only within groups defined by the observed data. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the fully observed variable only. MAR is more realistic than MCAR.  
-MNAR stands for missing not at random. This occurs when the probability of being missing is varied for reasons that are unknown. That is to say, if there is a fully observed varialbe and a variable with missing data, the probability of response depends on the variable with missing data and possibly on the fully observed variable as well.
+MNAR stands for missing not at random. This occurs when the probability of being missing is varied for reasons that are unknown. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the variable with missing data and possibly on the fully observed variable as well.
 
 2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.  
 
 #### Solution - explaining how MICE works
-Multiple Imputation by Chained Equations is a procedure that uses predictive models to iteratively fill in the missing data in a a dataset. During each iteration, each specified variable in the dataset is imputed using the other variables. In the end, a complete data set is returned, however, you can choose to create multiple complete datasets that are then pooled to create a final data set. 
+Multiple Imputation by Chained Equations is a procedure that uses predictive models to iteratively fill in the missing data in a dataset. During each iteration, each specified variable in the dataset is imputed using the other variables. In the end, a complete dataset is returned, however, you can choose to create multiple complete datasets that are then pooled to create a final dataset. 
 
 3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.  
 
@@ -77,7 +77,7 @@ icu_cohort <- icu_cohort %>%
   
 Replace apparent data entry errors by `NA`s.  
 We will consider values outside of the 1% to 99% percentile range to be data entry errors.  
-This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult witht the data provider to determine what constitutes an extreme value for each lab measurement and vital.   
+This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes an extreme value for each lab measurement and vital.   
 If the identified data point is out of this range, then replace it with `NA`.  
   
 **Lab Measurements**  
@@ -231,7 +231,7 @@ All remaining variables are missing less than 5000 values.
 colSums(is.na(icu_cohort))[colSums(is.na(icu_cohort)) > 5000]
 ```
 
-In order for the imputation process to run faster, subset the data set by removing variables that are non-informative or not relevant to our predictive model in Question 2.
+In order for the imputation process to run faster, subset the dataset by removing variables that are non-informative or not relevant to our predictive model in Question 2.
 
 * Remove ID variables (`subject_id`, `hadm_id`, `stay_id`) since they are non-informative in regards to prediction.
 
@@ -273,6 +273,8 @@ if(!file.exists("miceObj_icu_cohort.RData")){
 }
 
 load("miceObj_icu_cohort.RData")
+
+print(miceObj)
 ```
 
 5. Make imputation diagnostic plots and explain what they mean.
@@ -280,9 +282,9 @@ load("miceObj_icu_cohort.RData")
 #### Solution - diagnostic plots
 
 **Distribution of imputed values**  
-Numeric varialbes:
+Numeric variables:
 
-* The red line is the density of the original, non-missing data. The smaller, black lines are the density of the imputed values in each of the data sets. 
+* The red line is the density of the original, non-missing data. The smaller, black lines are the density of the imputed values in each of the datasets. 
 
 * For each of the numeric variables, the densities of the imputed values are very close to those of the non-missing data. The densities of the imputed blood pressure variables deviate the most from the original non-missing data. 
 ```{r, fig.width=14, fig.height=12}
@@ -291,15 +293,15 @@ plotDistributions(miceObj, vars = 'allNumeric')
 
 Categorical variable:
 
-* The bar graph gives the distribution of the original, non-missing data. The dots give the distribution of the imputed values in each data set. 
+* The bar graph gives the distribution of the original, non-missing data. The dots give the distribution of the imputed values in each dataset. 
 
-* The distribution of the imputed values is very similiar to that of the origianl, non-missing data. 
+* The distribution of the imputed values is very similar to that of the original, non-missing data. 
 ```{r, fig.width=4, fig.height=3}
 plotDistributions(miceObj, vars = 'allCategorical')
 ```
 
 **Center and dispersion convergence**  
-Sometimes, if the missing data locations are correlated with higher or lower values, we need to run multiple iterations for the process to converge to the true theoretical mean/percent of mode (given the information that exists in the data set). Looking at the spaghetti plots below, there does not seem to be a convergence issue with any of the imputed variables.
+Sometimes, if the missing data locations are correlated with higher or lower values, we need to run multiple iterations for the process to converge to the true theoretical mean/percent of mode (given the information that exists in the dataset). Looking at the spaghetti plots below, there does not seem to be a convergence issue with any of the imputed variables.
 ```{r, fig.width=14, fig.height=12}
 plotVarConvergence(miceObj, vars = 'allNumeric')
 ```
@@ -314,27 +316,77 @@ Plot the variable importance for each imputed variable. The top axis contains th
 plotVarImportance(miceObj)
 ```
 
-**Imputed variance between data sets**  
-We can get a feel for the variance experienced for each imputed value between the data sets using the plot below. For marital status (categorical), we see that the distribution of the number of unique imputed values is nearly the same as the theoretical distribution of the unique levels, given they were drawn randomly. For the numeric variables, we see a range of about 70-80% of samples with a SD below the population SD.
+**Imputed variance between datasets**  
+We can get a feel for the variance experienced for each imputed value between the datasets using the plot below. For marital status (categorical), we see that the distribution of the number of unique imputed values is nearly the same as the theoretical distribution of the unique levels, given they were drawn randomly. For the numeric variables, we see a range of about 70-80% of samples with a SD below the population SD.
 ```{r, fig.width=18, fig.height=18}
 plotImputationVariance(miceObj, ncol = 1)
 ```
 
-6. Obtain a complete data set by averaging the 3 imputed data sets.
+6. Obtain a complete dataset by averaging the 3 imputed datasets.
 
-#### Solution - complete data set
+#### Solution - complete dataset
 
+Numeric variables: get average value of each variable across the 3 datasets, by subject
 ```{r}
+#3 imputed datasets
 dataList <- completeData(miceObj)
 datImp1 <- dataList[[1]]
 datImp2 <- dataList[[2]]
 datImp3 <- dataList[[3]]
 
-# saveRDS(datImp1, "icu_imputed1.rds")
-# saveRDS(datImp2, "icu_imputed2.rds")
-# saveRDS(datImp3, "icu_imputed3.rds")
+#convert to numeric matrix
+matImp1 <- data.matrix(datImp1[, c(5:21)])
+matImp2 <- data.matrix(datImp2[, c(5:21)])
+matImp3 <- data.matrix(datImp3[, c(5:21)])
+
+#average the 3 matrices
+mat.numeric.avg <- (matImp1 + matImp2 + matImp3)/3
+
+#convert back to data frame
+icu_cohort_num <- as.data.frame(mat.numeric.avg)
 ```
 
+Marital status: get average status across the 3 datasets, by subject
+```{r}
+#get marital status from each imputed dataset
+msImp1 <- data.frame(ms = datImp1$marital_status)
+msImp2 <- data.frame(ms = datImp2$marital_status)
+msImp3 <- data.frame(ms = datImp3$marital_status)
+
+#convert to a numeric matrix (using dummy variables, divorced is reference group)
+ms.mat1 <- model.matrix(~ ms + 1, msImp1)
+ms.mat2 <- model.matrix(~ ms + 1, msImp2)
+ms.mat3 <- model.matrix(~ ms + 1, msImp3)
+
+#average the 3 matrices
+mat.cat.avg <- (ms.mat1 + ms.mat2 + ms.mat3)/3
+
+#convert back to data frame
+icu_cohort_cat <- as.data.frame(mat.cat.avg[, -1])
+
+#round averages to 0 or 1 to get appropriate dummy variable value
+#if there is a tie, choose status that is more frequent(order: married, single, widowed, divorced)
+icu_cohort_cat <- icu_cohort_cat %>%
+  mutate(married = ifelse((msMARRIED == 1/3 & 
+                             (msMARRIED == msSINGLE | msMARRIED == msWIDOWED)) |
+                            msMARRIED %in% c(1, 2/3), 1, 0),
+         single = ifelse((msSINGLE == 1/3 & 
+                            msSINGLE == msWIDOWED & msSINGLE > msMARRIED) |
+                           msSINGLE %in% c(1, 2/3), 1, 0),
+         widowed = ifelse(msWIDOWED %in% c(1, 2/3), 1, 0)) %>%
+  select(married, single, widowed)
+```
+
+Combine averaged numeric and categorical variables to create complete dataset
+```{r}
+subject_id <- icu_cohort$subject_id
+demo_vars <- icu_cohort_sub[,c("ethnicity", "gender")]
+icu_cohort_imp <- cbind(subject_id, demo_vars, icu_cohort_cat, icu_cohort_num)
+
+icu_cohort_imp %>%
+  as.tibble() %>%
+  print(width = Inf)
+```
 
 
 ## Q2. Predicting 30-day mortality
