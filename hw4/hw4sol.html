@@ -501,7 +501,7 @@ icu_cohort &lt;- icu_cohort %&gt;%
             edouttime, dod, deathtime, admit_to_death))</code></pre>
 <p>Replace apparent data entry errors by <code>NA</code>s.<br />
 We will consider values outside of the 1% to 99% percentile range to be data entry errors.<br />
-This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes an extreme value for each lab measurement and vital.<br />
+This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes as an extreme value for each lab measurement and vital.<br />
 If the identified data point is out of this range, then replace it with <code>NA</code>.</p>
 <p><strong>Lab Measurements</strong></p>
 <pre class="r"><code>#bicarbonate 

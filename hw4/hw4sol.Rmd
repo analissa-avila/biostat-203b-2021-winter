@@ -77,7 +77,7 @@ icu_cohort <- icu_cohort %>%
   
 Replace apparent data entry errors by `NA`s.  
 We will consider values outside of the 1% to 99% percentile range to be data entry errors.  
-This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes an extreme value for each lab measurement and vital.   
+This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes as an extreme value for each lab measurement and vital.   
 If the identified data point is out of this range, then replace it with `NA`.  
   
 **Lab Measurements**  
