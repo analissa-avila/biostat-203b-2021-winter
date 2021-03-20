@@ -39,9 +39,14 @@ Done.
 1. Explain the jargon MCAR, MAR, and MNAR.  
 
 #### Solution - explaining MCAR, MAR, and MNAR
-MCAR, MAR, and MNAR refer to the three missing data mechanisms. A missing data mechanism is the process that determines the probabilities of data being missing.  
+MCAR, MAR, and MNAR refer to the three missing data mechanisms. A missing data mechanism is the process that determines the probabilities of data being missing. 
+  
 MCAR stands for missing completely at random. This occurs when the probability of being missing is the same for all cases. Essentially the cause of the missingness is unrelated to the data. Although MCAR is the most ideal missing data mechanism, it is often unrealistic.  
+  
+  
 MAR stands for missing at random. This occurs when the probability of being missing is the same only within groups defined by the observed data. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the fully observed variable only. MAR is more realistic than MCAR.  
+  
+  
 MNAR stands for missing not at random. This occurs when the probability of being missing is varied for reasons that are unknown. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the variable with missing data and possibly on the fully observed variable as well.
 
 2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.  
@@ -76,9 +81,14 @@ icu_cohort <- icu_cohort %>%
 ```
   
 Replace apparent data entry errors by `NA`s.  
+  
+  
 We will consider values outside of the 1% to 99% percentile range to be data entry errors.  
 This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes as an extreme value for each lab measurement and vital.   
 If the identified data point is out of this range, then replace it with `NA`.  
+  
+  
+  **Note:** Unknown ethnicity is retained as its own category rather than considering it missing. It may be of interest to analyze the results of patients with "unknown" ethnicity. For example, if patients with unknown ethnicity have higher odds of death in 30 days, it could be hypothesized that patient who are more ill are unable or unwilling to provide race/ethnicity information. 
   
 **Lab Measurements**  
 ```{r}
@@ -402,6 +412,7 @@ library(splitstackshape)
 
 set.seed(40)  #set seed for reproducibility
 
+#if ethnicity value is "unable to obtain" or "unknown", set to "unknown"
 icu_cohort_imp <- icu_cohort_imp %>%
   mutate(ethnicity = ifelse(ethnicity == "UNABLE TO OBTAIN", 
                             "UNKNOWN", ethnicity))
@@ -418,7 +429,10 @@ test <- sets$SAMP2
 
 ##### Logisitc regression
 ```{r}
+#set white to be the reference group for ethnicity
 train$ethnicity <- relevel(as.factor(train$ethnicity), "WHITE")
+
+#fit logistic regression model
 logit.fit <- glm(died_in_30days ~ ethnicity + factor(gender) + married + 
                    single + widowed + age_at_adm + bicarbonate + calcium + 
                    chloride + creatinine + glucose + magnesium + potassium + 
@@ -429,20 +443,138 @@ logit.fit <- glm(died_in_30days ~ ethnicity + factor(gender) + married +
                  data = train, 
                  family = binomial)
 
-
-round(exp(cbind(OR = coef(logit.fit), confint(logit.fit))), 4)
+#print coefficient estimates and odds ratio
+round(cbind(Estimate = coef(logit.fit), OR = exp(coef(logit.fit))), 3)
 
 ```
 
 ##### Logistic regression with lasso penalty
+Define predictor and outcome variables to be used in the model,
 ```{r}
+#define predictor variables, categorical variables dummy coded
+X <- model.matrix(died_in_30days ~ ., train)[, -c(1, 2)]
+
+#define outcome variable
+y <- train$died_in_30days
+```
+
+Find the optimal value of lambda that minimizes the cross-validation error.  
+
+* The value of the optimal lambda is approximately 0.0003.
+* The value of lambda that gives the simplest model but also lies within one standard error of the optimal value of lambda is 0.005
+```{r}
+library(glmnet)
+
+#find the best lambda using cross-validation
+set.seed(100) 
+cv.lasso <- cv.glmnet(X, y, alpha = 1, family = "binomial")
+plot(cv.lasso)
+
+#optimal lambda 
+cv.lasso$lambda.min
+#lambda with simplest model within one SE of optimal lambda
+cv.lasso$lambda.1se
+```
+
+Fit logistic regression model with lasso penalty **(using optimal lambda)**.
+
+* The dummy variables for Other ethnicity and widowed are set to zero (i.e. removed from the model). Since it is generally best practice to keep all levels of a categorical variable, we would **not** remove these dummy variables from our final model.
+```{r}
+#fit model
+lasso.fit <- glmnet(X, y, alpha = 1, family = "binomial",
+                lambda = cv.lasso$lambda.min)
+
+#print coefficient estimates and odds ratio
+cbind.data.frame(Variable = c("(Intercept)", colnames(X)),
+            Estimate = round(as.vector(coef(lasso.fit)), 3), 
+            OR = round(as.vector(exp(coef(lasso.fit))), 3))
+
+```
+
+Fit logistic regression model with lasso penalty **(using lambda that gives simpler model)**.
+
+* The dummy variables for every ethnicity accept Unknown are set to zero. We would keep ethnicity in the final model since one level is still considered significant.
+
+* The dummy variables for all marital status variables are set to zero. We would remove marital status from the final model.
+
+* Gender, hematocrit, and mean NI blood pressure are all set to zero and would be removed from the final model. 
+```{r}
+#fit model
+lasso.fit.simp <- glmnet(X, y, alpha = 1, family = "binomial",
+                lambda = cv.lasso$lambda.1se)
+
+#print coefficient estimates and odds ratio
+cbind.data.frame(Variable = c("(Intercept)", colnames(X)),
+            Estimate = round(as.vector(coef(lasso.fit.simp)), 3), 
+            OR = round(as.vector(exp(coef(lasso.fit.simp))), 3))
 
 ```
 
 3. Compare model prediction performance on the test set.
 
 #### Solution - compare model prediction performance
-```{r}
 
+##### Logistic regression
+The model's prediction accuracy is 90.17%
+```{r}
+#make predictions on test data
+probabilities.logit <- logit.fit %>% predict(test, type = "response")
+predicted.death.logit <- ifelse(probabilities.logit > 0.5, 1, 0)
+
+#model accuracy
+observed.death <- test$died_in_30days
+mean(predicted.death.logit == observed.death)
 ```
 
+
+##### Logistic regression with lasso penalty
+Using the optimal lambda, the model's prediction accuracy is 90.06%
+```{r}
+#make predictions on test data
+x.test <- model.matrix(died_in_30days ~ ., test)[, -c(1, 2)]
+probabilities.lasso <- lasso.fit %>% predict(newx = x.test)
+predicted.death.lasso <- ifelse(probabilities.lasso > 0.5, 1, 0)
+
+#model accuracy
+mean(predicted.death.lasso == observed.death)
+```
+
+Using the lambda that gives the simpler model, the model's prediction accuracy is 89.94%
+```{r}
+#make predictions on test data
+probabilities.lasso.simp <- lasso.fit.simp %>% predict(newx = x.test)
+predicted.death.lasso.simp <- ifelse(probabilities.lasso.simp > 0.5, 1, 0)
+
+#model accuracy
+mean(predicted.death.lasso.simp == observed.death)
+```
+
+##### Prediction results
+The prediction accuracy of each model are all within 0.23% of each other. Since, the prediction performance of each model is so similar, we will choose the simplest model as our final model. Therefore we will remove marital status, gender, hematocrit, and mean NI blood pressure from the model.
+
+#### Results of final model
+Using the full ICU cohort data set with imputed values, the following **significant** relationships between a given variable (controlling for all other variables in the model) and occurrence of death within 30 days of ICU admission were seen.
+
+* The odds of a patient of unknown ethnicity dying within 30 days compared to a White patient are 2.48.  
+
+* For every one year increase in age and every one unit increase in creatinine, glucose, magnesium, potassium, sodium, wbc, heart rate, and respiratory rate patients had higher odds of dying in 30 days.
+
+* For every one unit increase in bicarbonate, calcium, chloride, systolic NI blood pressure, and temperature patients had lower odds of dying in 30 days.
+```{r, message=FALSE}
+#set white to be the reference group for ethnicity
+icu_cohort_imp$ethnicity <- relevel(as.factor(icu_cohort_imp$ethnicity), 
+                                    "WHITE")
+
+#fit logistic regression model
+final.fit <- glm(died_in_30days ~ ethnicity + age_at_adm + bicarbonate + 
+                   calcium + chloride + creatinine + glucose + magnesium + 
+                   potassium + sodium + wbc + heart_rate + 
+                   non_invasive_blood_pressure_systolic + 
+                   respiratory_rate + temperature_fahrenheit, 
+                 data = icu_cohort_imp, 
+                 family = binomial)
+
+#print odds ratios and their confidence intervals
+round(exp(cbind(OR = coef(final.fit), confint(final.fit))), 2)
+
+```
