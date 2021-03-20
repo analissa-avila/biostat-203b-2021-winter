@@ -1,0 +1,580 @@
+---
+title: "Biostat 203B Homework 4 Solutions"
+author: Analissa Avila
+subtitle: Due Mar 12 @ 11:59PM
+output:
+  # ioslides_presentation: default
+  html_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+                      
+Display machine information:
+```{r}
+sessionInfo()
+```
+
+Load database libraries and the tidyverse frontend:
+```{r}
+library(tidyverse)
+library(lubridate)
+library(miceRanger)
+```
+
+## Q1. Missing data
+
+Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a dataset without missing values.
+
+0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
+
+    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren.  
+    
+#### Solution - read tutorials
+Done.
+
+1. Explain the jargon MCAR, MAR, and MNAR.  
+
+#### Solution - explaining MCAR, MAR, and MNAR
+MCAR, MAR, and MNAR refer to the three missing data mechanisms. A missing data mechanism is the process that determines the probabilities of data being missing. 
+  
+MCAR stands for missing completely at random. This occurs when the probability of being missing is the same for all cases. Essentially the cause of the missingness is unrelated to the data. Although MCAR is the most ideal missing data mechanism, it is often unrealistic.  
+  
+  
+MAR stands for missing at random. This occurs when the probability of being missing is the same only within groups defined by the observed data. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the fully observed variable only. MAR is more realistic than MCAR.  
+  
+  
+MNAR stands for missing not at random. This occurs when the probability of being missing is varied for reasons that are unknown. That is to say, if there is a fully observed variable and a variable with missing data, the probability of response depends on the variable with missing data and possibly on the fully observed variable as well.
+
+2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.  
+
+#### Solution - explaining how MICE works
+Multiple Imputation by Chained Equations is a procedure that uses predictive models to iteratively fill in the missing data in a dataset. During each iteration, each specified variable in the dataset is imputed using the other variables. In the end, a complete dataset is returned, however, you can choose to create multiple complete datasets that are then pooled to create a final dataset. 
+
+3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.  
+
+#### Solution - data checking and cleaning
+Read in icu cohort data
+```{r}  
+#read in icu cohort data from HW3
+icu_cohort <- readRDS("icu_cohort.rds")
+```
+  
+Discard variables with substantial missingness (>5,000 `NA`s).  
+
+* Three of the demographic, lab measurement, and vitals variables are missing more than 5,000 values: `lactate` (19,843 missing), `arterial_blood_pressure_systolic` (29,019 missing), and `arterial_blood_pressure_mean` (28,897 missing).  
+
+* The variables `edregtime`,  `edouttime`, `dod`, `deathtime`, and `admit_to_death` are also missing over 5,000 values and will be removed.
+```{r}
+#Identify variables with > 5000 NAs
+colSums(is.na(icu_cohort))[colSums(is.na(icu_cohort)) > 5000]
+
+#Remove 8 identified variables
+icu_cohort <- icu_cohort %>%
+  select(-c(lactate, arterial_blood_pressure_systolic,
+            arterial_blood_pressure_mean, edregtime, 
+            edouttime, dod, deathtime, admit_to_death))
+
+```
+  
+Replace apparent data entry errors by `NA`s.  
+  
+  
+We will consider values outside of the 1% to 99% percentile range to be data entry errors.  
+This range was chosen because, by looking at the Shiny app/researching normal ranges, many outlying values per the 1.5IQR rule are still plausible. We should consult with the data provider to determine what constitutes as an extreme value for each lab measurement and vital.   
+If the identified data point is out of this range, then replace it with `NA`.  
+  
+  
+  **Note:** Unknown ethnicity is retained as its own category rather than considering it missing. It may be of interest to analyze the results of patients with "unknown" ethnicity. For example, if patients with unknown ethnicity have higher odds of death in 30 days, it could be hypothesized that patient who are more ill are unable or unwilling to provide race/ethnicity information. 
+  
+**Lab Measurements**  
+```{r}
+#bicarbonate 
+bicarb.low <- quantile(icu_cohort$bicarbonate, .01, na.rm = TRUE)
+bicarb.high <- quantile(icu_cohort$bicarbonate, .99, na.rm = TRUE)
+
+icu_cohort$bicarbonate <- ifelse(icu_cohort$bicarbonate < bicarb.low | 
+                                   icu_cohort$bicarbonate > bicarb.high,
+                                 NA, icu_cohort$bicarbonate)
+
+
+#calcium
+calcium.low <- quantile(icu_cohort$calcium, .01, na.rm = TRUE)
+calcium.high <- quantile(icu_cohort$calcium, .99, na.rm = TRUE)
+
+icu_cohort$calcium <- ifelse(icu_cohort$calcium < calcium.low | 
+                               icu_cohort$calcium > calcium.high,
+                             NA, icu_cohort$calcium)
+
+
+#chloride
+chloride.low <- quantile(icu_cohort$chloride, .01, na.rm = TRUE)
+chloride.high <- quantile(icu_cohort$chloride, .99, na.rm = TRUE)
+
+icu_cohort$chloride <- ifelse(icu_cohort$chloride < chloride.low |
+                                icu_cohort$chloride > chloride.high,
+                              NA, icu_cohort$chloride)
+
+
+#creatinine
+creat.low <- quantile(icu_cohort$creatinine, .01, na.rm = TRUE)
+creat.high <- quantile(icu_cohort$creatinine, .99, na.rm = TRUE)
+
+icu_cohort$creatinine <- ifelse(icu_cohort$creatinine < creat.low |
+                                  icu_cohort$creatinine > creat.high, 
+                                NA, icu_cohort$creatinine)
+
+#glucose
+glucose.low <- quantile(icu_cohort$glucose, .01, na.rm = TRUE)
+glucose.high <- quantile(icu_cohort$glucose, .99, na.rm = TRUE)
+
+icu_cohort$glucose <- ifelse(icu_cohort$glucose < glucose.low |
+                               icu_cohort$glucose > glucose.high, 
+                                NA, icu_cohort$glucose)
+
+
+#magnesium
+magn.low <- quantile(icu_cohort$magnesium, .01, na.rm = TRUE)
+magn.high <- quantile(icu_cohort$magnesium, .99, na.rm = TRUE)
+
+icu_cohort$magnesium <- ifelse(icu_cohort$magnesium < magn.low | 
+                                 icu_cohort$magnesium > magn.high, 
+                                NA, icu_cohort$magnesium)
+
+#potassium
+potas.low <- quantile(icu_cohort$potassium, .01, na.rm = TRUE)
+potas.high <- quantile(icu_cohort$potassium, .99, na.rm = TRUE)
+
+icu_cohort$potassium <- ifelse(icu_cohort$potassium < potas.low | 
+                                 icu_cohort$potassium > potas.high, 
+                                NA, icu_cohort$potassium)
+
+
+#sodium
+sodium.low <- quantile(icu_cohort$sodium, .01, na.rm = TRUE)
+sodium.high <- quantile(icu_cohort$sodium, .99, na.rm = TRUE)
+
+icu_cohort$sodium <- ifelse(icu_cohort$sodium < sodium.low | 
+                                 icu_cohort$sodium > sodium.high, 
+                                NA, icu_cohort$sodium)
+
+
+#hematocrit
+hema.low <- quantile(icu_cohort$hematocrit, .01, na.rm = TRUE)
+hema.high <- quantile(icu_cohort$hematocrit, .99, na.rm = TRUE)
+
+icu_cohort$hematocrit <- ifelse(icu_cohort$hematocrit < hema.low | 
+                                 icu_cohort$hematocrit > hema.high, 
+                                NA, icu_cohort$hematocrit)
+
+
+#wbc
+wbc.low <- quantile(icu_cohort$wbc, .01, na.rm = TRUE)
+wbc.high <- quantile(icu_cohort$wbc, .99, na.rm = TRUE)
+
+icu_cohort$wbc <- ifelse(icu_cohort$wbc < wbc.low |
+                           icu_cohort$wbc > wbc.high, 
+                                NA, icu_cohort$wbc)
+```
+
+**Vitals**  
+```{r}
+#heart rate
+hr.low <- quantile(icu_cohort$heart_rate, .01, na.rm = TRUE)
+hr.high <- quantile(icu_cohort$heart_rate, .99, na.rm = TRUE)
+
+icu_cohort$heart_rate <- ifelse(icu_cohort$heart_rate < hr.low |
+                                  icu_cohort$heart_rate > hr.high,
+                                NA, icu_cohort$heart_rate)
+
+
+#systolic NI blood pressure
+NIbp.sys.low <- quantile(icu_cohort$non_invasive_blood_pressure_systolic,
+                         .01, na.rm = TRUE)
+NIbp.sys.high <- quantile(icu_cohort$non_invasive_blood_pressure_systolic,
+                          .99, na.rm = TRUE)
+
+icu_cohort$non_invasive_blood_pressure_systolic <- 
+  ifelse(icu_cohort$non_invasive_blood_pressure_systolic < NIbp.sys.low |
+           icu_cohort$non_invasive_blood_pressure_systolic > NIbp.sys.high,
+         NA, icu_cohort$non_invasive_blood_pressure_systolic)
+
+
+#mean NI blood pressure
+NIbp.mean.low <- quantile(icu_cohort$non_invasive_blood_pressure_mean, 
+                          .01, na.rm = TRUE)
+NIbp.mean.high <- quantile(icu_cohort$non_invasive_blood_pressure_mean,
+                           .99, na.rm = TRUE)
+
+icu_cohort$non_invasive_blood_pressure_mean <- 
+  ifelse(icu_cohort$non_invasive_blood_pressure_mean < NIbp.mean.low |
+           icu_cohort$non_invasive_blood_pressure_mean > NIbp.mean.high,
+         NA, icu_cohort$non_invasive_blood_pressure_mean)
+
+
+#respiratory rate
+rr.low <- quantile(icu_cohort$respiratory_rate, .01, na.rm = TRUE)
+rr.high <- quantile(icu_cohort$respiratory_rate, .99, na.rm = TRUE)
+
+icu_cohort$respiratory_rate <- ifelse(icu_cohort$respiratory_rate < rr.low |
+                                        icu_cohort$respiratory_rate > rr.high,
+                                      NA, icu_cohort$respiratory_rate)
+
+
+#temperature in fahrenheit
+temp.low <- quantile(icu_cohort$temperature_fahrenheit, .01, na.rm = TRUE)
+temp.high <- quantile(icu_cohort$temperature_fahrenheit, .99, na.rm = TRUE)
+
+icu_cohort$temperature_fahrenheit <- 
+  ifelse(icu_cohort$temperature_fahrenheit < temp.low |
+           icu_cohort$temperature_fahrenheit > temp.high,
+         NA, icu_cohort$temperature_fahrenheit)
+```
+
+Now that more `NA`s have been created, check again for variables with > 5000 missing values.  
+All remaining variables are missing less than 5000 values.
+```{r}
+#Identify variables with > 5000 NAs
+colSums(is.na(icu_cohort))[colSums(is.na(icu_cohort)) > 5000]
+```
+
+In order for the imputation process to run faster, subset the dataset by removing variables that are non-informative or not relevant to our predictive model in Question 2.
+
+* Remove ID variables (`subject_id`, `hadm_id`, `stay_id`) since they are non-informative in regards to prediction.
+
+* Remove `first_careunit`, `last_careunit`, `admission_type`, `admission_location`, and `discharge_location`. These variables are not relevant to our predictive model.
+
+* Remove `intime`, `outtime`, `admittime`, and `dischtime` as they are likely non-informative in regards to prediction.
+
+* Remove `anchor_year` and `anchor_year_group` since they are likely non-informative in regards to prediction.
+
+* Remove `anchor_age` but keep `age_at_admit` which is more informative.
+
+* Remove `language` and `insurance` as these demographic variables are not relevant to our predictive model.
+
+* Remove `died` (death indicator) and `hospital_expire_flag` since the mortality outcome of interest is death in 30 days.
+
+```{r}
+icu_cohort_sub <- icu_cohort %>%
+  select(-c(subject_id, hadm_id, stay_id,
+            first_careunit, last_careunit, admission_type,
+            admission_location, discharge_location,
+            intime, outtime, admittime, dischtime,
+            anchor_year, anchor_year_group, anchor_age,
+            insurance, language, died, hospital_expire_flag))
+```
+
+4. Impute missing values by `miceRanger` (request $m=3$ datasets). This step is very computational intensive. Make sure to save the imputation results as a file.
+
+#### Solution - imputation
+```{r}
+if(!file.exists("miceObj_icu_cohort.RData")){
+  miceObj <- miceRanger(
+    icu_cohort_sub,
+    m = 3,
+    returnModels = FALSE,
+    verbose = FALSE,
+    max.depth = 10
+    )
+  save(miceObj, file = "miceObj_icu_cohort.RData")
+}
+
+load("miceObj_icu_cohort.RData")
+
+print(miceObj)
+```
+
+5. Make imputation diagnostic plots and explain what they mean.
+
+#### Solution - diagnostic plots
+
+**Distribution of imputed values**  
+Numeric variables:
+
+* The red line is the density of the original, non-missing data. The smaller, black lines are the density of the imputed values in each of the datasets. 
+
+* For each of the numeric variables, the densities of the imputed values are very close to those of the non-missing data. The densities of the imputed blood pressure variables deviate the most from the original non-missing data. 
+```{r, fig.width=14, fig.height=12}
+plotDistributions(miceObj, vars = 'allNumeric')
+```
+
+Categorical variable:
+
+* The bar graph gives the distribution of the original, non-missing data. The dots give the distribution of the imputed values in each dataset. 
+
+* The distribution of the imputed values is very similar to that of the original, non-missing data. 
+```{r, fig.width=4, fig.height=3}
+plotDistributions(miceObj, vars = 'allCategorical')
+```
+
+**Center and dispersion convergence**  
+Sometimes, if the missing data locations are correlated with higher or lower values, we need to run multiple iterations for the process to converge to the true theoretical mean/percent of mode (given the information that exists in the dataset). Looking at the spaghetti plots below, there does not seem to be a convergence issue with any of the imputed variables.
+```{r, fig.width=14, fig.height=12}
+plotVarConvergence(miceObj, vars = 'allNumeric')
+```
+
+```{r, fig.width=4, fig.height=3}
+plotVarConvergence(miceObj, vars = 'allCategorical')
+```
+
+**Variable importance**  
+Plot the variable importance for each imputed variable. The top axis contains the variable that was used to impute the variable on the left axis. The plot shows that age at admission was used to impute marital status, heart rate was used to impute respiratory rate and temperature, etc.  
+```{r, fig.width=14, fig.height=12}
+plotVarImportance(miceObj)
+```
+
+**Imputed variance between datasets**  
+We can get a feel for the variance experienced for each imputed value between the datasets using the plot below. For marital status (categorical), we see that the distribution of the number of unique imputed values is nearly the same as the theoretical distribution of the unique levels, given they were drawn randomly. For the numeric variables, we see a range of about 70-80% of samples with a SD below the population SD.
+```{r, fig.width=18, fig.height=18}
+plotImputationVariance(miceObj, ncol = 1)
+```
+
+6. Obtain a complete dataset by averaging the 3 imputed datasets.
+
+#### Solution - complete dataset
+
+Numeric variables: get average value of each variable across the 3 datasets, by subject
+```{r}
+#3 imputed datasets
+dataList <- completeData(miceObj)
+datImp1 <- dataList[[1]]
+datImp2 <- dataList[[2]]
+datImp3 <- dataList[[3]]
+
+#convert to numeric matrix
+matImp1 <- data.matrix(datImp1[, c(5:21)])
+matImp2 <- data.matrix(datImp2[, c(5:21)])
+matImp3 <- data.matrix(datImp3[, c(5:21)])
+
+#average the 3 matrices
+mat.numeric.avg <- (matImp1 + matImp2 + matImp3)/3
+
+#convert back to data frame
+icu_cohort_num <- as.data.frame(mat.numeric.avg)
+```
+
+Marital status: get average status across the 3 datasets, by subject
+```{r}
+#get marital status from each imputed dataset
+msImp1 <- data.frame(ms = datImp1$marital_status)
+msImp2 <- data.frame(ms = datImp2$marital_status)
+msImp3 <- data.frame(ms = datImp3$marital_status)
+
+#convert to a numeric matrix (using dummy variables, divorced is reference group)
+ms.mat1 <- model.matrix(~ ms + 1, msImp1)
+ms.mat2 <- model.matrix(~ ms + 1, msImp2)
+ms.mat3 <- model.matrix(~ ms + 1, msImp3)
+
+#average the 3 matrices
+mat.cat.avg <- (ms.mat1 + ms.mat2 + ms.mat3)/3
+
+#convert back to data frame
+icu_cohort_cat <- as.data.frame(mat.cat.avg[, -1])
+
+#round averages to 0 or 1 to get appropriate dummy variable value
+#if there is a tie, choose status that is more frequent(order: married, single, widowed, divorced)
+icu_cohort_cat <- icu_cohort_cat %>%
+  mutate(married = ifelse((msMARRIED == 1/3 & 
+                             (msMARRIED == msSINGLE | msMARRIED == msWIDOWED)) |
+                            msMARRIED %in% c(1, 2/3), 1, 0),
+         single = ifelse((msSINGLE == 1/3 & 
+                            msSINGLE == msWIDOWED & msSINGLE > msMARRIED) |
+                           msSINGLE %in% c(1, 2/3), 1, 0),
+         widowed = ifelse(msWIDOWED %in% c(1, 2/3), 1, 0)) %>%
+  select(married, single, widowed)
+```
+
+Combine averaged numeric and categorical variables to create complete dataset
+```{r}
+subject_id <- icu_cohort$subject_id
+demo_vars <- icu_cohort_sub[,c("ethnicity", "gender")]
+icu_cohort_imp <- cbind(subject_id, demo_vars, icu_cohort_cat, icu_cohort_num)
+
+icu_cohort_imp %>%
+  as.tibble() %>%
+  print(width = Inf)
+```
+
+
+## Q2. Predicting 30-day mortality
+
+Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (`glm()` function), (2) logistic regression with lasso penalty (glmnet package), (3) random forest (randomForest package), or (4) neural network.
+
+1. Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
+
+#### Solution - partition data into training set and test set
+```{r}
+#install.packages("splitstackshape")
+library(splitstackshape)
+
+set.seed(40)  #set seed for reproducibility
+
+#if ethnicity value is "unable to obtain" or "unknown", set to "unknown"
+icu_cohort_imp <- icu_cohort_imp %>%
+  mutate(ethnicity = ifelse(ethnicity == "UNABLE TO OBTAIN", 
+                            "UNKNOWN", ethnicity))
+
+#partition data into training and test sets, stratifying on 30-day mortality
+sets <- stratified(icu_cohort_imp, "died_in_30days", 0.8, bothSets = TRUE)
+train <- sets$SAMP1
+test <- sets$SAMP2
+```
+
+2. Train the models using the training set.
+
+#### Solution - train the models
+
+##### Logisitc regression
+```{r}
+#set white to be the reference group for ethnicity
+train$ethnicity <- relevel(as.factor(train$ethnicity), "WHITE")
+
+#fit logistic regression model
+logit.fit <- glm(died_in_30days ~ ethnicity + factor(gender) + married + 
+                   single + widowed + age_at_adm + bicarbonate + calcium + 
+                   chloride + creatinine + glucose + magnesium + potassium + 
+                   sodium + hematocrit + wbc + heart_rate + 
+                   non_invasive_blood_pressure_systolic + 
+                   non_invasive_blood_pressure_mean + 
+                   respiratory_rate + temperature_fahrenheit, 
+                 data = train, 
+                 family = binomial)
+
+#print coefficient estimates and odds ratio
+round(cbind(Estimate = coef(logit.fit), OR = exp(coef(logit.fit))), 3)
+
+```
+
+##### Logistic regression with lasso penalty
+Define predictor and outcome variables to be used in the model,
+```{r}
+#define predictor variables, categorical variables dummy coded
+X <- model.matrix(died_in_30days ~ ., train)[, -c(1, 2)]
+
+#define outcome variable
+y <- train$died_in_30days
+```
+
+Find the optimal value of lambda that minimizes the cross-validation error.  
+
+* The value of the optimal lambda is approximately 0.0003.
+* The value of lambda that gives the simplest model but also lies within one standard error of the optimal value of lambda is 0.005
+```{r}
+library(glmnet)
+
+#find the best lambda using cross-validation
+set.seed(100) 
+cv.lasso <- cv.glmnet(X, y, alpha = 1, family = "binomial")
+plot(cv.lasso)
+
+#optimal lambda 
+cv.lasso$lambda.min
+#lambda with simplest model within one SE of optimal lambda
+cv.lasso$lambda.1se
+```
+
+Fit logistic regression model with lasso penalty **(using optimal lambda)**.
+
+* The dummy variables for Other ethnicity and widowed are set to zero (i.e. removed from the model). Since it is generally best practice to keep all levels of a categorical variable, we would **not** remove these dummy variables from our final model.
+```{r}
+#fit model
+lasso.fit <- glmnet(X, y, alpha = 1, family = "binomial",
+                lambda = cv.lasso$lambda.min)
+
+#print coefficient estimates and odds ratio
+cbind.data.frame(Variable = c("(Intercept)", colnames(X)),
+            Estimate = round(as.vector(coef(lasso.fit)), 3), 
+            OR = round(as.vector(exp(coef(lasso.fit))), 3))
+
+```
+
+Fit logistic regression model with lasso penalty **(using lambda that gives simpler model)**.
+
+* The dummy variables for every ethnicity accept Unknown are set to zero. We would keep ethnicity in the final model since one level is still considered significant.
+
+* The dummy variables for all marital status variables are set to zero. We would remove marital status from the final model.
+
+* Gender, hematocrit, and mean NI blood pressure are all set to zero and would be removed from the final model. 
+```{r}
+#fit model
+lasso.fit.simp <- glmnet(X, y, alpha = 1, family = "binomial",
+                lambda = cv.lasso$lambda.1se)
+
+#print coefficient estimates and odds ratio
+cbind.data.frame(Variable = c("(Intercept)", colnames(X)),
+            Estimate = round(as.vector(coef(lasso.fit.simp)), 3), 
+            OR = round(as.vector(exp(coef(lasso.fit.simp))), 3))
+
+```
+
+3. Compare model prediction performance on the test set.
+
+#### Solution - compare model prediction performance
+
+##### Logistic regression
+The model's prediction accuracy is 90.17%
+```{r}
+#make predictions on test data
+probabilities.logit <- logit.fit %>% predict(test, type = "response")
+predicted.death.logit <- ifelse(probabilities.logit > 0.5, 1, 0)
+
+#model accuracy
+observed.death <- test$died_in_30days
+mean(predicted.death.logit == observed.death)
+```
+
+
+##### Logistic regression with lasso penalty
+Using the optimal lambda, the model's prediction accuracy is 90.06%
+```{r}
+#make predictions on test data
+x.test <- model.matrix(died_in_30days ~ ., test)[, -c(1, 2)]
+probabilities.lasso <- lasso.fit %>% predict(newx = x.test)
+predicted.death.lasso <- ifelse(probabilities.lasso > 0.5, 1, 0)
+
+#model accuracy
+mean(predicted.death.lasso == observed.death)
+```
+
+Using the lambda that gives the simpler model, the model's prediction accuracy is 89.94%
+```{r}
+#make predictions on test data
+probabilities.lasso.simp <- lasso.fit.simp %>% predict(newx = x.test)
+predicted.death.lasso.simp <- ifelse(probabilities.lasso.simp > 0.5, 1, 0)
+
+#model accuracy
+mean(predicted.death.lasso.simp == observed.death)
+```
+
+##### Prediction results
+The prediction accuracy of each model are all within 0.23% of each other. Since, the prediction performance of each model is so similar, we will choose the simplest model as our final model. Therefore we will remove marital status, gender, hematocrit, and mean NI blood pressure from the model.
+
+#### Results of final model
+Using the full ICU cohort data set with imputed values, the following **significant** relationships between a given variable (controlling for all other variables in the model) and occurrence of death within 30 days of ICU admission were seen.
+
+* The odds of a patient of unknown ethnicity dying within 30 days compared to a White patient are 2.48.  
+
+* For every one year increase in age and every one unit increase in creatinine, glucose, magnesium, potassium, sodium, wbc, heart rate, and respiratory rate patients had higher odds of dying in 30 days.
+
+* For every one unit increase in bicarbonate, calcium, chloride, systolic NI blood pressure, and temperature patients had lower odds of dying in 30 days.
+```{r, message=FALSE}
+#set white to be the reference group for ethnicity
+icu_cohort_imp$ethnicity <- relevel(as.factor(icu_cohort_imp$ethnicity), 
+                                    "WHITE")
+
+#fit logistic regression model
+final.fit <- glm(died_in_30days ~ ethnicity + age_at_adm + bicarbonate + 
+                   calcium + chloride + creatinine + glucose + magnesium + 
+                   potassium + sodium + wbc + heart_rate + 
+                   non_invasive_blood_pressure_systolic + 
+                   respiratory_rate + temperature_fahrenheit, 
+                 data = icu_cohort_imp, 
+                 family = binomial)
+
+#print odds ratios and their confidence intervals
+round(exp(cbind(OR = coef(final.fit), confint(final.fit))), 2)
+
+```
